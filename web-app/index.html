@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="default.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tone@15/build/Tone.js"></script>
     <script type="module" src="main.js"></script>
 </head>
@@ -65,6 +66,12 @@
 
             <!-- Free play canvas — visible only in free play mode -->
             <div id="free-play-canvas" hidden aria-hidden="true"></div>
+
+            <!-- Free play circle-mode toggle -->
+            <div id="free-play-controls" hidden>
+                <button class="free-toggle-btn free-toggle-btn--active" data-free-mode="fall" type="button">disappear</button>
+                <button class="free-toggle-btn" data-free-mode="collect" type="button">collect</button>
+            </div>
 
             <!-- Restart button positioned absolutely near grid -->
             <button id="btn-new-game" class="restart-btn" type="button" aria-label="New game">

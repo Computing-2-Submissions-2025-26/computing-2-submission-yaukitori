@@ -664,7 +664,8 @@ const ui = {
     chord_current: [],
     chord_rows: [],
     chord_active_row: 0,
-    chord_difficulty: 1
+    chord_difficulty: 1,
+    free_mode: "fall"   // "fall" | "collect"
 };
 
 // Letter key → white note mapping
@@ -710,6 +711,65 @@ function render_current_slots() {
     }
 }
 
+// ── Matter.js physics (collect mode) ─────────────────────
+const PHYS_W    = 1392;   // matches CSS: 1512 - 60 - 60
+const PHYS_H    = 425;    // matches CSS canvas height
+const CIRCLE_R  = 20;     // matches CSS width/height 40px
+
+let phys_engine = null;
+let phys_runner = null;
+let phys_raf    = null;
+let phys_bodies = [];
+
+function phys_start() {
+    if (phys_engine) { return; }
+    phys_engine = Matter.Engine.create({ gravity: { y: 0.04 } });
+
+    const B = Matter.Bodies;
+    Matter.Composite.add(phys_engine.world, [
+        B.rectangle(PHYS_W / 2,  PHYS_H + 25,  PHYS_W + 200, 50,        { isStatic: true }),
+        B.rectangle(-25,         PHYS_H / 2,   50, PHYS_H * 3,           { isStatic: true }),
+        B.rectangle(PHYS_W + 25, PHYS_H / 2,   50, PHYS_H * 3,           { isStatic: true })
+    ]);
+
+    phys_runner = Matter.Runner.create();
+    Matter.Runner.run(phys_runner, phys_engine);
+
+    (function tick() {
+        phys_raf = requestAnimationFrame(tick);
+        phys_bodies.forEach(function (item) {
+            const p = item.body.position;
+            item.el.style.left = (p.x - CIRCLE_R) + "px";
+            item.el.style.top  = (p.y - CIRCLE_R) + "px";
+        });
+    }());
+}
+
+function phys_stop() {
+    if (phys_raf)    { cancelAnimationFrame(phys_raf); phys_raf = null; }
+    if (phys_runner) { Matter.Runner.stop(phys_runner); phys_runner = null; }
+    if (phys_engine) { Matter.Engine.clear(phys_engine); phys_engine = null; }
+    phys_bodies = [];
+}
+
+function phys_add_circle(note, canvas) {
+    const x    = CIRCLE_R + Math.random() * (PHYS_W - 2 * CIRCLE_R);
+    const body = Matter.Bodies.circle(x, CIRCLE_R, CIRCLE_R, {
+        restitution: 0.35,
+        friction:    0.6,
+        frictionAir: 0.01,
+        density:     0.002
+    });
+    Matter.Composite.add(phys_engine.world, body);
+
+    const div = el("div", ["free-circle", "free-circle--physics"]);
+    div.style.background = NOTE_COLOURS[note];
+    div.style.left = (x - CIRCLE_R) + "px";
+    div.style.top  = "0px";
+    canvas.appendChild(div);
+    phys_bodies.push({ body, el: div });
+}
+
 function press_key(note) {
     const key_el = document.querySelector('#piano-keyboard [data-note="' + note + '"]');
     if (key_el) { key_el.classList.add("key-pressed"); }
@@ -723,17 +783,23 @@ function release_key(note) {
 function spawn_free_circle(note) {
     const canvas = document.getElementById("free-play-canvas");
     if (!canvas || canvas.hasAttribute("hidden")) { return; }
-    const r = 20;
-    const cw = canvas.offsetWidth || 1392;
-    const ch = canvas.offsetHeight || 425;
-    const x = r + Math.random() * Math.max(0, cw - 2 * r);
-    const y = r + Math.random() * Math.max(0, ch - 2 * r - 70);
-    const circle = el("div", "free-circle");
-    circle.style.left = (x - r) + "px";
-    circle.style.top = (y - r) + "px";
-    circle.style.background = NOTE_COLOURS[note];
-    canvas.appendChild(circle);
-    setTimeout(function () { if (circle.parentNode) { circle.remove(); } }, 1200);
+
+    if (ui.free_mode === "collect") {
+        if (!phys_engine) { phys_start(); }
+        phys_add_circle(note, canvas);
+    } else {
+        // Fall and disappear.
+        const cw = canvas.offsetWidth  || PHYS_W;
+        const ch = canvas.offsetHeight || PHYS_H;
+        const x  = CIRCLE_R + Math.random() * Math.max(0, cw - 2 * CIRCLE_R);
+        const y  = CIRCLE_R + Math.random() * Math.max(0, ch - 2 * CIRCLE_R - 70);
+        const circle = el("div", "free-circle");
+        circle.style.left       = (x - CIRCLE_R) + "px";
+        circle.style.top        = (y - CIRCLE_R) + "px";
+        circle.style.background = NOTE_COLOURS[note];
+        canvas.appendChild(circle);
+        setTimeout(function () { if (circle.parentNode) { circle.remove(); } }, 1200);
+    }
 }
 
 function on_note(note) {
@@ -860,8 +926,10 @@ function show_game_over(won) {
 
 function start_new_game() {
     clear_melody_timeouts();
+    phys_stop();
     document.getElementById("overlay-listen").setAttribute("hidden", "");
     document.getElementById("free-play-canvas").setAttribute("hidden", "");
+    document.getElementById("free-play-controls").setAttribute("hidden", "");
     ui.locked = false;
     set_keyboard_enabled(true);
     document.getElementById("piano-keyboard").classList.remove("keyboard--chord");
@@ -877,6 +945,8 @@ function start_new_game() {
         const canvas = document.getElementById("free-play-canvas");
         canvas.innerHTML = "";
         canvas.removeAttribute("hidden");
+        document.getElementById("free-play-controls").removeAttribute("hidden");
+        if (ui.free_mode === "collect") { phys_start(); }
         set_status("Free play — press any key to play notes!");
         return;
     }
@@ -1121,6 +1191,25 @@ document.addEventListener("DOMContentLoaded", function () {
                 on_note(extra_note);
             }
         }
+    });
+
+    // Free play circle-mode toggle
+    document.querySelectorAll(".free-toggle-btn").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+            const prev = ui.free_mode;
+            ui.free_mode = this.dataset.freeMode;
+            document.querySelectorAll(".free-toggle-btn").forEach(function (b) {
+                b.classList.toggle("free-toggle-btn--active", b.dataset.freeMode === ui.free_mode);
+            });
+            const canvas = document.getElementById("free-play-canvas");
+            if (ui.free_mode === "collect" && prev !== "collect") {
+                if (canvas) { canvas.innerHTML = ""; }
+                phys_start();
+            } else if (ui.free_mode !== "collect" && prev === "collect") {
+                phys_stop();
+                if (canvas) { canvas.innerHTML = ""; }
+            }
+        });
     });
 
     document.addEventListener("keyup", function (e) {
