@@ -2,15 +2,21 @@
   "name": "computing-2-submission",
   "type": "module",
   "version": "1.0.0",
-  "description": "",
-  "main": "web-app/Module.js",
+  "description": "Piano Mastermind — a web-app game for Computing 2",
+  "main": "web-app/Mastermind.js",
   "author": "",
   "license": "ISC",
+  "scripts": {
+    "start": "npx --yes http-server . -p 8080 --cors",
+    "test": "mocha --recursive web-app/tests/",
+    "generate-docs": "jsdoc -c jsdoc.json"
+  },
   "dependencies": {
     "ramda": "^0.32.0"
   },
   "devDependencies": {
     "docdash": "^2.0.2",
+    "jsdoc": "^4.0.4",
     "mocha": "^11.7.5"
   }
 }

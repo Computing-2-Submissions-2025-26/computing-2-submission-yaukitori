@@ -1,0 +1,1097 @@
+/* ================================================================
+   Piano Mastermind — default.css
+   Pixel-perfect styling representing the 1512 × 982 SVG design.
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+:root {
+    --purple: #545184;
+    --purple-mid: #6E6B96;
+    --purple-light: #F0F0FA;
+
+    /* Note colours (from SVG) */
+    --C: #F17070;
+    --D: #F1A370;
+    --E: #EBF170;
+    --F: #7FF170;
+    --G: #70E8F1;
+    --A: #7092F1;
+    --B: #B370F1;
+    --C2: #F170DC;
+
+    --peg-green: #7FF170; /* Exact color of green peg from SVG is #7FF170 or custom green */
+    --peg-red: #F17070;   /* Red peg is #F17070 matching C */
+    --peg-empty: #F0F0FA;
+
+    --font: 'Montserrat', system-ui, sans-serif;
+}
+
+/* ── Reset ───────────────────────────────────────────────── */
+[hidden] { display: none !important; }
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #ffffff;
+    font-family: var(--font);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Screen-reader only */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* ── Main Container (Pixel Perfect 1512x982) ───────────── */
+#game-container {
+    width: 1512px;
+    height: 982px;
+    background: #ffffff;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+    flex-shrink: 0;
+    transform-origin: top left;
+}
+
+/* ── Logo & Texts (Absolute from SVG) ───────────────────── */
+.topbar {
+    position: absolute;
+    left: 68px;
+    top: 61px;
+    display: block;
+}
+
+.logo-text {
+    display: block;
+    font-size: 65px;
+    font-weight: 700;
+    color: var(--purple-mid);
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+
+.logo-dot {
+    color: var(--purple-mid);
+}
+
+.subtitle-text {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--purple-mid);
+    margin-top: 24px;
+    letter-spacing: -0.01em;
+}
+
+/* ── Header Buttons ──────────────────────────────────────── */
+.pill-btn {
+    font-family: var(--font);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--purple);
+    background: var(--purple-light);
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 15px;
+    position: absolute;
+    height: 94px;
+    width: 171px;
+    top: -49px;
+    box-shadow: 0 8px 0 rgba(84, 81, 132, 0.2);
+}
+
+.pill-btn:hover {
+    background: #e0dff4;
+}
+
+.pill-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 6px 0 rgba(84, 81, 132, 0.2);
+}
+
+.button-levels {
+    left: 1333px;
+}
+
+/* How-to-play — far right, bottom aligned with logo */
+#btn-how-to-play {
+    top: 86px;
+    left: auto;
+    right: 30px;
+    width: 50px;
+    height: 40px;
+    border-radius: 20px;
+    padding: 0;
+    padding-bottom: 0;
+    align-items: center;
+    justify-content: center;
+    writing-mode: horizontal-tb;
+    transform: none;
+    box-shadow: 0 5px 0 rgba(84, 81, 132, 0.2);
+    font-size: 19px;
+}
+
+#btn-how-to-play:active {
+    transform: translateY(2px);
+    box-shadow: 0 3px 0 rgba(84, 81, 132, 0.2);
+}
+
+/* Mode button — centered horizontal pill, bottom aligned with logo */
+#btn-mode {
+    left: 50%;
+    top: 86px;
+    width: 200px;
+    height: 40px;
+    border-radius: 20px;
+    transform: translateX(-50%);
+    align-items: center;
+    padding-bottom: 0;
+    font-size: 16px;
+    box-shadow: 0 5px 0 rgba(84, 81, 132, 0.2);
+}
+
+#btn-mode:active {
+    transform: translateX(-50%) translateY(2px);
+    box-shadow: 0 3px 0 rgba(84, 81, 132, 0.2);
+}
+
+/* Mode indicator dots below mode button */
+.mode-dots {
+    position: absolute;
+    left: 50%;
+    top: 133px; /* 86px top + 40px height + 7px gap */
+    transform: translateX(-50%);
+    display: flex;
+    gap: 7px;
+}
+
+.mode-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #C8C4E8;
+    display: block;
+    transition: background 0.2s;
+}
+
+.mode-dot--active {
+    background: var(--purple-mid);
+}
+
+/* Large button for dialog overlay card */
+.pill-btn--large {
+    position: static;
+    height: auto;
+    width: auto;
+    font-size: 1rem;
+    padding: 11px 28px;
+    border-radius: 15px;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: none;
+}
+
+/* ── Game Area ───────────────────────────────────────────── */
+.game-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1512px;
+    height: 982px;
+    pointer-events: none; /* Let clicks pass through to child elements */
+}
+
+/* Restart button — leftmost of the three right-side icon buttons */
+.restart-btn {
+    position: absolute;
+    left: auto;
+    right: 150px; /* 30px (?) + 50px (?) + 10px + 50px (eye) + 10px */
+    top: 86px;
+    width: 50px;
+    height: 40px;
+    border: none;
+    background: var(--purple-light);
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    border-radius: 20px;
+    box-shadow: 0 5px 0 rgba(84, 81, 132, 0.2);
+    transition: background 0.15s, transform 0.1s, box-shadow 0.1s;
+}
+
+.restart-img {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+
+.restart-btn:hover {
+    background: #e0dff4;
+}
+
+.restart-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 3px 0 rgba(84, 81, 132, 0.2);
+}
+
+/* ── Board Columns & Slots (Flipped 90 degrees) ────────── */
+.board {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1512px;
+    height: 982px;
+    pointer-events: none;
+}
+
+/* A single attempt column */
+.guess-column {
+    position: absolute;
+    width: 44px;
+    height: 310px;
+    pointer-events: auto;
+}
+
+/* Active column highlight border style */
+.guess-column::after {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: -12px;
+    width: 68px;
+    height: 316px;
+    border: 3px solid transparent;
+    border-radius: 34px;
+    pointer-events: none;
+    transition: border-color 0.2s;
+}
+
+.guess-column--active::after {
+    border-color: var(--purple-mid);
+}
+
+.guess-column--long::after {
+    height: 375px;
+}
+
+/* Slots vertically stacked */
+.slot {
+    position: absolute;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--purple-light);
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: block;
+    overflow: hidden;
+    transition: background 0.18s, transform 0.12s;
+}
+
+.slot--filled {
+    transform: scale(1.08);
+}
+
+.slot--filled:hover {
+    filter: brightness(0.9);
+}
+
+/* Perfect pitch (6-note) mode — smaller slots with proportional spacing */
+.guess-column--long .slot {
+    width: 36px;
+    height: 36px;
+}
+.guess-column--long .slot--filled {
+    transform: scale(1.08);
+}
+
+/* 2 × 2 feedback peg grid under column */
+.peg-grid {
+    position: absolute;
+    left: 0;
+    top: 249px; /* Starting space after vertical slots */
+    width: 44px;
+    height: 35px;
+}
+
+.peg {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--peg-empty);
+    display: block;
+    transition: background 0.22s;
+}
+
+.peg--green {
+    background: var(--peg-green);
+}
+
+.peg--red {
+    background: var(--peg-red);
+}
+
+/* ── Keyboard section (y=597 to 939) ────────────────────── */
+.keyboard-section {
+    position: absolute;
+    left: -13px;
+    top: 597px;
+    width: 1539px;
+    height: 342px;
+    background: #545184;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.keyboard-side {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    z-index: 6;
+    pointer-events: none;
+}
+
+.keyboard-side--left  { left: 0; }
+.keyboard-side--right { right: 0; }
+
+.keyboard {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/* ── Stationary Note Color Bands (top of playable keys) ── */
+.key-color-band {
+    position: absolute;
+    top: 0;
+    height: 103px;
+    width: 78px;
+    z-index: 2;
+    pointer-events: none;
+    border-radius: 15px;
+}
+
+.key-color-label {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 28px;
+    font-weight: 700;
+    color: #ffffff;
+    pointer-events: none;
+}
+
+/* ── White Keys (rendered below color bands) ────────────── */
+.white-key {
+    position: absolute;
+    top: 40px;
+    width: 78px;
+    height: 232px;
+    background: #ffffff;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    z-index: 3;
+    transition: transform 0.08s, box-shadow 0.08s;
+    box-shadow: 0 13px 0 #545184;
+}
+
+/* Playable white key pressed states */
+.white-key:active,
+.white-key.pressed {
+    transform: translateY(8px);
+    box-shadow: 0 5px 0 #545184;
+}
+
+.white-key:focus-visible {
+    outline: 3px solid #fff;
+    outline-offset: 2px;
+    z-index: 10;
+}
+
+/* Key label empty badge (pill) at bottom of playable keys */
+.key-badge {
+    position: absolute;
+    bottom: 4px;
+    left: 3px;
+    width: 70px;
+    height: 57px;
+    border-radius: 15px;
+    background: linear-gradient(to bottom, #ffffff, #EFDFEA);
+    pointer-events: none;
+}
+
+/* Decorative keys left/right (reduced opacity) */
+.key--decorative {
+    opacity: 0.5;
+    cursor: default;
+    box-shadow: 0 13px 0 rgba(84, 81, 132, 0.4);
+    pointer-events: none;
+}
+
+/* ── Black Keys (absolute overlay) ───────────────────────── */
+.black-key {
+    position: absolute;
+    top: 31px;
+    width: 45px;
+    height: 116px;
+    background: var(--purple);
+    border-radius: 15px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.black-key-shadow {
+    position: absolute;
+    top: 38px;
+    width: 45px;
+    height: 116px;
+    background: var(--purple);
+    opacity: 0.6;
+    border-radius: 15px;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.key--decorative-black {
+    opacity: 0.5;
+}
+
+/* ── Overlays ────────────────────────────────────────────── */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(84, 81, 132, 0.52);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    animation: fadeIn 0.2s ease;
+}
+
+.overlay[hidden] {
+    display: none;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.overlay-card {
+    background: #fff;
+    border-radius: 20px;
+    padding: 2.4rem;
+    max-width: 440px;
+    width: 92%;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(84, 81, 132, 0.22);
+    animation: slideUp 0.22s ease;
+    text-align: center;
+}
+
+.overlay-card--wide {
+    max-width: 1000px;
+    text-align: left;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(18px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.overlay-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--purple);
+    margin-bottom: 0.5rem;
+}
+
+.overlay-body {
+    color: var(--purple-mid);
+    margin-bottom: 1.1rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+/* Mode toggle button — inverted when melody mode is active */
+.pill-btn--mode-active {
+    background: var(--purple);
+    color: #fff;
+    box-shadow: 0 8px 0 rgba(84, 81, 132, 0.4);
+}
+.pill-btn--mode-active:hover {
+    background: #6a679e;
+}
+
+/* Game-over overlay extras */
+.overlay-body--desc {
+    color: var(--purple-mid);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-style: italic;
+}
+
+.gameover-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.pill-btn--listen {
+    background: var(--purple);
+    color: #fff;
+    box-shadow: none;
+}
+.pill-btn--listen:hover {
+    background: #6a679e;
+}
+
+#yt-container {
+    border-radius: 12px;
+    overflow: hidden;
+    width: 560px;
+}
+#yt-container iframe {
+    display: block;
+}
+
+
+/* How-to-play mode section */
+.howto-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+}
+
+.howto-left {
+    flex: 0 0 35%;
+    padding-right: 1.4rem;
+}
+
+.howto-divider {
+    width: 1px;
+    align-self: stretch;
+    background: var(--purple-light);
+    flex-shrink: 0;
+}
+
+.howto-right {
+    flex: 0 0 36%;
+    padding-left: 1.4rem;
+    padding-right: 1.4rem;
+}
+
+.howto-tip-col {
+    flex: 1;
+    padding-left: 1.4rem;
+}
+
+.howto-modes {
+    margin-bottom: 1.1rem;
+}
+
+.howto-modes h3 {
+    font-size: 0.83rem;
+    font-weight: 600;
+    color: var(--purple);
+    margin-bottom: 0.5rem;
+}
+
+.mode-toggle-demo {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 0.7rem;
+}
+
+.mode-badge {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: var(--font);
+}
+
+.mode-badge--random {
+    background: var(--purple-light);
+    color: var(--purple);
+}
+
+.mode-badge--melody {
+    background: var(--purple);
+    color: #fff;
+}
+
+.mode-desc {
+    color: var(--purple-mid);
+    font-size: 0.84rem;
+    line-height: 1.5;
+    margin-bottom: 0.3rem;
+}
+
+.mode-desc--hint {
+    font-size: 0.78rem;
+    margin-top: 0.4rem;
+    opacity: 0.8;
+}
+
+.langer-btn {
+    display: inline-block;
+    margin-top: 0.7rem;
+    padding: 8px 16px;
+    background: var(--purple-light);
+    color: var(--purple);
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: var(--font);
+    text-decoration: none;
+    line-height: 1.4;
+    transition: background 0.15s;
+}
+.langer-btn:hover {
+    background: #e0dff4;
+}
+
+.secret-reveal {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 1.4rem;
+}
+
+.secret-reveal .slot {
+    position: relative; /* Keeps flow layout but lets .slot-label centre within slot */
+    cursor: default;
+}
+
+/* How-to-play modal elements */
+.howto-list {
+    padding-left: 1.2rem;
+    margin-bottom: 1.2rem;
+    color: var(--purple-mid);
+    line-height: 1.7;
+    font-size: 0.88rem;
+}
+
+.howto-list li {
+    margin-bottom: 0.3rem;
+}
+
+.howto-list ul {
+    margin-top: 0.2rem;
+    padding-left: 1.1rem;
+}
+
+.howto-controls {
+    margin-top: 0;
+}
+
+.howto-controls h3 {
+    font-size: 0.83rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: var(--purple);
+}
+
+.howto-colours h3 {
+    font-size: 0.83rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: var(--purple);
+}
+
+.colour-key-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 14px;
+}
+
+.colour-key-list li {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--purple);
+}
+
+.colour-swatch {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* How-to-play column diagram */
+.howto-col-demo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0.8rem auto;
+    padding: 14px 18px;
+    background: var(--purple-light);
+    border-radius: 16px;
+    width: fit-content;
+}
+
+.howto-col-demo__slots {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.howto-col-demo__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.howto-slot {
+    position: static !important;
+    width: 36px !important;
+    height: 36px !important;
+    cursor: default !important;
+    flex-shrink: 0;
+    transform: none !important;
+}
+
+.howto-peg {
+    position: static !important;
+    flex-shrink: 0;
+}
+
+.howto-num {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--purple);
+    min-width: 10px;
+}
+
+.howto-col-demo__pegs {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding-left: 4px;
+}
+
+.howto-col-demo__peg-row {
+    display: flex;
+    gap: 18px;
+}
+
+/* Perfect pitch listen overlay */
+.overlay-card--listen {
+    background: var(--purple);
+    color: #fff;
+    text-align: center;
+    padding: 3rem 4rem;
+    box-shadow: 0 20px 60px rgba(84, 81, 132, 0.4);
+}
+
+.listen-prompt {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 0.6rem;
+}
+
+.listen-sub {
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+/* ── Hear-it-again button (right of mode button) ────────── */
+#btn-hear-again {
+    /* mode button: center=756px, half-width=100px → right edge 856px; gap 10px */
+    left: 866px;
+    top: 86px;
+    width: auto;
+    min-width: 150px;
+    height: 40px;
+    border-radius: 20px;
+    transform: none;
+    align-items: center;
+    padding: 0 18px;
+    padding-bottom: 0;
+    font-size: 15px;
+    box-shadow: 0 5px 0 rgba(84, 81, 132, 0.2);
+}
+
+#btn-hear-again:active {
+    transform: translateY(2px);
+    box-shadow: 0 3px 0 rgba(84, 81, 132, 0.2);
+}
+
+/* ── Chord difficulty selector (right of hear-again button) ── */
+.chord-difficulty {
+    position: absolute;
+    /* hear-again: left=866px, min-width=150px → right edge≈1016px; gap 10px */
+    left: 1026px;
+    top: 86px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 12px;
+    background: var(--purple-light);
+    border-radius: 20px;
+    box-shadow: 0 5px 0 rgba(84, 81, 132, 0.2);
+}
+
+.difficulty-label {
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--purple-mid);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+.difficulty-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--purple);
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.difficulty-btn:hover {
+    background: rgba(110, 107, 150, 0.18);
+}
+
+.difficulty-btn--active {
+    background: var(--purple);
+    color: #fff;
+}
+
+.difficulty-btn--active:hover {
+    background: var(--purple-mid);
+}
+
+/* ── Chord board circles ─────────────────────────────────── */
+.chord-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--purple-light);
+    border: 3px solid transparent;
+    transition: border-color 0.2s;
+}
+
+.chord-circle--active {
+    border-color: var(--purple-mid);
+}
+
+.chord-note-circle {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--purple-light);
+    border: 2px solid rgba(84, 81, 132, 0.2);
+    cursor: pointer;
+    overflow: hidden;
+    transition: background 0.15s, transform 0.12s, box-shadow 0.12s, opacity 0.15s;
+}
+
+.chord-note-circle--filled {
+    transform: scale(1.08);
+    border-color: rgba(84, 81, 132, 0.35);
+}
+
+.chord-note-circle--filled .slot-label {
+    display: block;
+}
+
+.chord-note-circle--correct {
+    box-shadow: 0 0 0 3px var(--peg-green);
+}
+
+.chord-note-circle--wrong {
+    opacity: 0.38;
+}
+
+/* ── Cancel button style in listen overlay ──────────────── */
+.pill-btn--cancel {
+    margin-top: 1.4rem;
+    background: rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    box-shadow: none;
+}
+
+.pill-btn--cancel:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+.close-btn {
+    position: absolute;
+    top: 14px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: var(--purple-mid);
+    line-height: 1;
+}
+
+/* ── Accessibility toggle button ────────────────────────── */
+.a11y-btn {
+    position: absolute;
+    left: auto;
+    right: 90px; /* between restart (150px) and ? (30px) */
+    top: 86px;
+    width: 50px;
+    height: 40px;
+    border: none;
+    background: var(--purple-light);
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: auto;
+    border-radius: 20px;
+    box-shadow: 0 5px 0 rgba(84, 81, 132, 0.2);
+    transition: background 0.15s, transform 0.1s, box-shadow 0.1s;
+}
+
+.a11y-btn:hover {
+    background: #e0dff4;
+}
+
+.a11y-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 3px 0 rgba(84, 81, 132, 0.2);
+}
+
+/* Pressed/active state — filled purple to show mode is on */
+.a11y-btn--active {
+    background: var(--purple-mid);
+    box-shadow: 0 5px 0 rgba(84, 81, 132, 0.4);
+}
+
+.a11y-btn--active:hover {
+    background: var(--purple);
+}
+
+.a11y-btn--active:active {
+    transform: translateY(2px);
+    box-shadow: 0 3px 0 rgba(84, 81, 132, 0.4);
+}
+
+.a11y-img {
+    width: 22px;
+    height: 22px;
+    display: block;
+}
+
+/* Invert icon to white when button is active (dark background) */
+.a11y-btn--active .a11y-img {
+    filter: brightness(0) invert(1);
+}
+
+/* ── Note labels inside slots (a11y mode) ───────────────── */
+.slot-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+    /* White outline via text-shadow for contrast on any note colour */
+    text-shadow:
+        -1px -1px 0 rgba(0, 0, 0, 0.55),
+         1px -1px 0 rgba(0, 0, 0, 0.55),
+        -1px  1px 0 rgba(0, 0, 0, 0.55),
+         1px  1px 0 rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+    line-height: 1;
+    white-space: nowrap;
+    display: none; /* hidden until a11y mode is active */
+}
+
+.guess-column--long .slot-label {
+    font-size: 9px;
+}
+
+/* Always show note labels on filled slots */
+.slot--filled .slot-label {
+    display: block;
+}
+
+/* Also show in secret-reveal overlay slots */
+.secret-reveal .slot-label {
+    display: block;
+}
+
+/* ── Accessible peg colours (a11y mode overrides) ───────── */
+
+/* Green → blue circle: distinguishable by deuteranopes */
+.a11y-mode .peg--green {
+    background: #3D7EFF;
+}
+
+/* Red → orange diamond: different hue AND different shape */
+.a11y-mode .peg--red {
+    background: #FF8800;
+    border-radius: 2px;
+    transform: rotate(45deg);
+}

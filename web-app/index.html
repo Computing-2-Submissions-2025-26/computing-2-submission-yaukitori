@@ -1,9 +1,214 @@
-<!-- In HTML Comments are written like this -->
-<!-- They can all be removed for your apps -->
-<!doctype html> <!-- This first line tells browsers to expect modern standard html 5 -->
-<html lang="en-gb"> <!-- This is indicates the page is written in British English, useful for accessibility -->
-<meta charset="utf-8"> <!-- This indicates how the file is encoded. utf-8 is standard -->
-<title>Your Web-app Title</title> <!-- All pages need a title, this will be displayed in the browser's title bar -->
-<link rel="stylesheet" href="default.css"> <!-- Import style sheet – default.css -->
-<link rel="icon" href="./assets/favicon.png"> <!-- Import 'Favorites Icon' – favicon.png -->
-<script type="module" src="main.js"></script> <!-- Load the main script. Must be type="module". Have only one of these -->
+<!doctype html>
+<html lang="en-gb">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Piano Mastermind</title>
+    <meta name="description"
+        content="Guess the secret sequence of four piano notes — a Mastermind-style code-breaking game.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="default.css">
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="main.js"></script>
+</head>
+
+<body>
+
+    <!-- Main game container for 1512x982 scaling -->
+    <div id="game-container">
+
+        <!-- ── Top Logo and Texts (Absolute positions from SVG) ── -->
+        <header class="topbar" role="banner">
+            <span class="logo-text">mastermind<span class="logo-dot">.</span></span>
+        </header>
+
+        <!-- ── Top bar buttons (Levels, How to Play) ── -->
+        <!-- Chord difficulty selector — shown only in chord mode -->
+        <div id="chord-difficulty" class="chord-difficulty" aria-label="Chord difficulty" hidden>
+            <span class="difficulty-label">difficulty</span>
+            <button class="difficulty-btn difficulty-btn--active" type="button" data-difficulty="1" aria-label="Difficulty 1">1</button>
+            <button class="difficulty-btn" type="button" data-difficulty="2" aria-label="Difficulty 2">2</button>
+            <button class="difficulty-btn" type="button" data-difficulty="3" aria-label="Difficulty 3">3</button>
+            <button class="difficulty-btn" type="button" data-difficulty="4" aria-label="Difficulty 4">4</button>
+        </div>
+
+        <button id="btn-mode" class="pill-btn button-levels" type="button" aria-label="Toggle game mode">
+            random mode
+        </button>
+        <div class="mode-dots" aria-hidden="true">
+            <span class="mode-dot"></span>
+            <span class="mode-dot"></span>
+            <span class="mode-dot"></span>
+            <span class="mode-dot"></span>
+        </div>
+
+        <!-- Hear-it-again button — shown to the right of the mode button in perfect pitch / chord modes -->
+        <button id="btn-hear-again" class="pill-btn" type="button" aria-label="Hear the melody again" hidden>
+            hear it again
+        </button>
+
+        <button id="btn-how-to-play" class="pill-btn button-howto" type="button" aria-haspopup="dialog" aria-label="How to play">
+            ?
+        </button>
+
+        <!-- ── Game board (Absolute grid of 10 columns) ── -->
+        <main id="main-content" class="game-area">
+            <div id="status-message" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+
+            <!-- Grid columns and restart button positioned absolutely -->
+            <div class="board" id="guess-board"></div>
+
+            <!-- Restart button positioned absolutely near grid -->
+            <button id="btn-new-game" class="restart-btn" type="button" aria-label="New game">
+                <img src="images/replay.svg" alt="" aria-hidden="true" class="restart-img">
+            </button>
+
+            <!-- Accessibility toggle button -->
+            <button id="btn-a11y" class="a11y-btn" type="button" aria-label="Toggle accessibility mode" aria-pressed="false">
+                <img src="images/eye.svg" alt="" aria-hidden="true" class="a11y-img">
+            </button>
+        </main>
+
+        <!-- ── Piano keyboard (Absolute positioning matching SVG) ── -->
+        <section class="keyboard-section" aria-label="Piano keyboard">
+            <h2 class="sr-only">Piano keyboard — click a key to add a note to your guess</h2>
+            <img src="images/left.svg" class="keyboard-side keyboard-side--left" alt="" aria-hidden="true">
+            <div class="keyboard" id="piano-keyboard" role="group" aria-label="Piano keys"></div>
+            <img src="images/right.svg" class="keyboard-side keyboard-side--right" alt="" aria-hidden="true">
+        </section>
+
+    </div>
+
+    <!-- ── Perfect pitch listen overlay ─────────────────────── -->
+    <div id="overlay-listen" class="overlay" hidden>
+        <div class="overlay-card overlay-card--listen">
+            <p class="listen-prompt">listen carefully...</p>
+            <p class="listen-sub">try and replay this melody on the piano</p>
+            <button id="btn-cancel-listen" class="pill-btn pill-btn--large pill-btn--cancel" type="button">
+                cancel / switch modes
+            </button>
+        </div>
+    </div>
+
+    <!-- ── Game-over overlay ───────────────────────────────── -->
+    <div id="overlay-gameover" class="overlay" role="dialog" aria-modal="true" aria-labelledby="gameover-title" hidden>
+        <div class="overlay-card">
+            <h2 id="gameover-title" class="overlay-title"></h2>
+            <p id="gameover-body" class="overlay-body"></p>
+            <p id="gameover-desc" class="overlay-body overlay-body--desc" hidden></p>
+            <div class="secret-reveal" id="secret-reveal" aria-label="The secret code was"></div>
+            <div class="gameover-actions">
+                <button id="btn-listen" class="pill-btn pill-btn--large pill-btn--listen" type="button" hidden>
+                    listen to it (this takes you to youtube)
+                </button>
+                <button id="btn-play-again" class="pill-btn pill-btn--large" type="button">
+                    play again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── How-to-play modal ───────────────────────────────── -->
+    <div id="overlay-howto" class="overlay" role="dialog" aria-modal="true" aria-labelledby="howto-title" hidden>
+        <div class="overlay-card overlay-card--wide">
+            <button id="btn-close-howto" class="close-btn" type="button" aria-label="Close">✕</button>
+            <h2 id="howto-title" class="overlay-title">How to play</h2>
+            <div class="howto-layout">
+                <!-- Left: game modes -->
+                <div class="howto-left">
+                    <div class="howto-modes">
+                        <h3>Game modes</h3>
+                        <p class="mode-desc mode-desc--hint">Click the mode button in the middle of the screen to cycle between modes: random → melody → perfect pitch → chord.</p>
+                        <p class="mode-desc"><strong>Random mode:</strong> a completely random sequence of 4 notes is chosen as the secret code each game.</p>
+                        <p class="mode-desc"><strong>Melody mode:</strong> the secret code is taken from semi-famous songs that bring back memories for me. Guess it to reveal what the song is and listen to it on YouTube!</p>
+                        <p class="mode-desc"><strong>Perfect pitch mode:</strong> a 6-note melody is played to you after a short "get ready…" countdown. Use the <strong>hear it again</strong> button (right of the mode button) to replay it as many times as you need, then try to reproduce all 6 notes exactly. 10 attempts.</p>
+                        <p class="mode-desc"><strong>Chord mode:</strong> a chord is played to you at the start. Your job is to identify every note in the chord — order doesn't matter. You have 5 tries. After each guess, circles glow green if the note is in the chord, or fade out if it isn't. Use the <strong>hear it again</strong> button (and the difficulty selector next to it) to control the challenge:
+                            <br>· <em>Difficulty 1</em> — 3 white notes
+                            <br>· <em>Difficulty 2</em> — 4 white notes
+                            <br>· <em>Difficulty 3</em> — 4 notes including sharps (black keys)
+                            <br>· <em>Difficulty 4</em> — 5 notes including sharps
+                        </p>
+                        <a href="https://en.wikipedia.org/wiki/Absolute_pitch" target="_blank" rel="noopener noreferrer" class="langer-btn">what is perfect pitch?</a>
+                        <a href="https://monoskop.org/images/6/6c/Langer_Susanne_K_Philosophy_in_a_New_Key.pdf" target="_blank" rel="noopener noreferrer" class="langer-btn">click here to read Susanne Langer's <em>Philosophy in a New Key</em> to learn more about the associative power of music</a>
+                    </div>
+                </div>
+                <!-- Divider -->
+                <div class="howto-divider" aria-hidden="true"></div>
+                <!-- Right: instructions -->
+                <div class="howto-right">
+            <ol class="howto-list">
+                <li>A secret code of piano notes has been chosen for you (either randomly generated, a melody, or in the form of chords).</li>
+                <li>Click piano keys to build your guess. Notes play as you click.</li>
+                <li>After each attempt, the 2×2 grid below the column will show whether you have guessed correctly. Each peg position matches the note of the same number:
+                    <div class="howto-col-demo" aria-hidden="true">
+                        <div class="howto-col-demo__slots">
+                            <div class="howto-col-demo__row"><div class="slot howto-slot"></div><span class="howto-num">1</span></div>
+                            <div class="howto-col-demo__row"><div class="slot howto-slot"></div><span class="howto-num">2</span></div>
+                            <div class="howto-col-demo__row"><div class="slot howto-slot"></div><span class="howto-num">3</span></div>
+                            <div class="howto-col-demo__row"><div class="slot howto-slot"></div><span class="howto-num">4</span></div>
+                        </div>
+                        <div class="howto-col-demo__pegs">
+                            <div class="howto-col-demo__peg-row">
+                                <div class="howto-col-demo__row"><div class="peg howto-peg"></div><span class="howto-num">1</span></div>
+                                <div class="howto-col-demo__row"><div class="peg howto-peg"></div><span class="howto-num">2</span></div>
+                            </div>
+                            <div class="howto-col-demo__peg-row">
+                                <div class="howto-col-demo__row"><div class="peg howto-peg"></div><span class="howto-num">3</span></div>
+                                <div class="howto-col-demo__row"><div class="peg howto-peg"></div><span class="howto-num">4</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    It is colour coded as follows:
+                    <ul>
+                        <li><span class="peg peg--green" aria-label="green peg"></span> <strong>Green:</strong> right note, right position.</li>
+                        <li><span class="peg peg--red" aria-label="red peg"></span> <strong>Red:</strong> right note, wrong position.</li>
+                        <li><span class="peg" aria-label="empty peg"></span> <strong>Empty:</strong> that note is not in the secret at all.</li>
+                    </ul>
+                </li>
+                <li>You have 10 attempts per game. Good luck and have fun!</li>
+            </ol>
+            <div class="howto-colours">
+                <h3>Note colours</h3>
+                <ul class="colour-key-list" aria-label="Note colour guide">
+                    <li><span class="colour-swatch" style="background:#F17070"></span> C</li>
+                    <li><span class="colour-swatch" style="background:#F1A370"></span> D</li>
+                    <li><span class="colour-swatch" style="background:#EBF170"></span> E</li>
+                    <li><span class="colour-swatch" style="background:#7FF170"></span> F</li>
+                    <li><span class="colour-swatch" style="background:#70E8F1"></span> G</li>
+                    <li><span class="colour-swatch" style="background:#7092F1"></span> A</li>
+                    <li><span class="colour-swatch" style="background:#B370F1"></span> B</li>
+                    <li><span class="colour-swatch" style="background:#F170DC"></span> C2</li>
+                </ul>
+            </div>
+                </div><!-- end .howto-right -->
+                <!-- Divider -->
+                <div class="howto-divider" aria-hidden="true"></div>
+                <!-- Far right: controls & tips -->
+                <div class="howto-tip-col">
+                    <div class="howto-controls">
+                        <h3>Controls &amp; tips</h3>
+                        <ul class="howto-list">
+                            <li>Keys <strong>a s d f g h j k</strong> play C D E F G A B C2 — the letter is shown on each white key.</li>
+                            <li>In chord mode (difficulties 3 &amp; 4), <strong>w e t y u</strong> also play C# D# F# G# A# — shown on the black keys.</li>
+                            <li>Your guess is submitted automatically once you've picked enough notes.</li>
+                            <li>Click a filled slot to remove that note from your guess.</li>
+                            <li><strong>Backspace</strong> or <strong>Delete</strong> removes the last note added.</li>
+                            <li>The <strong>eye button</strong> (top right) swaps peg colours — helpful if red and green are hard to tell apart:
+                                <ul style="margin-top:0.4rem;list-style:none;padding-left:0;display:flex;flex-direction:column;gap:0.25rem">
+                                    <li><span class="peg" style="background:#3D7EFF;display:inline-block;vertical-align:middle;margin-right:6px" aria-label="blue peg"></span> <strong>Blue:</strong> right note, right position.</li>
+                                    <li><span class="peg" style="background:#FF8800;border-radius:2px;transform:rotate(45deg);display:inline-block;vertical-align:middle;margin-right:6px" aria-label="orange diamond peg"></span> <strong>Orange:</strong> right note, wrong position.</li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </div>
+                </div><!-- end .howto-tip-col -->
+            </div><!-- end .howto-layout -->
+        </div>
+    </div>
+
+</body>
+
+</html>

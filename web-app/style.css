@@ -1,0 +1,189 @@
+/* style.css — Piano keyboard layout */
+
+/* ── Keyboard frame ─────────────────────────────────────────────────── */
+.keyboard-section {
+    background: #545184;
+}
+
+/* ── Keyboard div: absolutely fill the gap between left.svg and right.svg ─
+   left.svg = 394px, right.svg = 458px, section = 1586px.
+   This guarantees C touches left panel and C2 touches right panel.     */
+.keyboard {
+    position: absolute;
+    left: 394px;
+    right: 441px;
+    top: 0;
+    bottom: 0;
+    width: auto;
+    height: auto;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+/* ── Per-key wrapper: flex: 1 divides 734px evenly across 8 keys ────── */
+.key-wrapper {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+}
+
+/* ── Playable key button ─────────────────────────────────────────────── */
+.piano-key {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+}
+
+/* ── Key SVG image: fills wrapper width exactly ──────────────────────── */
+.key-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+    transition: filter 0.12s;
+}
+
+/* Hover/press: mute the key colour */
+.piano-key:hover .key-img,
+.piano-key:active .key-img {
+    filter: brightness(0.72);
+}
+
+.piano-key:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 2px;
+    position: relative;
+    z-index: 10;
+}
+
+/* ── Keyboard shortcut letter labels (white keys, bottom centre) ──────── */
+.key-number {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--purple-mid);
+    pointer-events: none;
+    z-index: 10;
+    line-height: 1;
+    user-select: none;
+}
+
+/* ── Interactive black keys (chord mode) ──────────────────────────────── */
+.black-key-btn {
+    position: absolute;
+    top: 31px;
+    width: 47px;
+    height: 116px;
+    background: var(--purple);
+    border-radius: 15px;
+    z-index: 5;
+    border: none;
+    cursor: default;
+    pointer-events: none;
+    overflow: hidden;
+    transition: filter 0.1s;
+}
+
+/* Colour band + labels hidden by default; only shown in chord mode diff 3–4 */
+.black-key-color-band,
+.black-key-note,
+.black-key-shortcut {
+    display: none;
+}
+
+.keyboard--chord .black-key-color-band,
+.keyboard--chord .black-key-note,
+.keyboard--chord .black-key-shortcut {
+    display: block;
+}
+
+/* Colour band at the top of each playable black key */
+.black-key-color-band {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    border-radius: 13px 13px 0 0;
+    pointer-events: none;
+    opacity: 0.9;
+}
+
+/* Note name at the top of each black key (inside the colour band) */
+.black-key-note {
+    position: absolute;
+    top: 7px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font);
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+    pointer-events: none;
+    line-height: 1;
+    user-select: none;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+    white-space: nowrap;
+}
+
+/* Keyboard shortcut letter at the bottom of each black key */
+.black-key-shortcut {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 700;
+    color: #ffffff;
+    pointer-events: none;
+    line-height: 1;
+    user-select: none;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+
+.keyboard--chord .black-key-btn {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.keyboard--chord .black-key-btn:hover {
+    filter: brightness(1.3);
+}
+
+.keyboard--chord .black-key-btn:active {
+    filter: brightness(0.8);
+}
+
+/* ── Black-key overlays: absolute within .keyboard ───────────────────── */
+.black-key {
+    position: absolute;
+    top: 31px;
+    width: 47px;
+    height: 116px;
+    background: #545184;
+    border-radius: 15px;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.black-key-shadow {
+    position: absolute;
+    top: 38px;
+    width: 47px;
+    height: 116px;
+    background: #545184;
+    opacity: 0.6;
+    border-radius: 15px;
+    z-index: 4;
+    pointer-events: none;
+}
