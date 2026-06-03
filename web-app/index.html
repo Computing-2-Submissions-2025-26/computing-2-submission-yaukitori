@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="default.css">
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/tone@15/build/Tone.js"></script>
     <script type="module" src="main.js"></script>
 </head>
 
@@ -43,6 +44,7 @@
             <span class="mode-dot"></span>
             <span class="mode-dot"></span>
             <span class="mode-dot"></span>
+            <span class="mode-dot"></span>
         </div>
 
         <!-- Hear-it-again button — shown to the right of the mode button in perfect pitch / chord modes -->
@@ -60,6 +62,9 @@
 
             <!-- Grid columns and restart button positioned absolutely -->
             <div class="board" id="guess-board"></div>
+
+            <!-- Free play canvas — visible only in free play mode -->
+            <div id="free-play-canvas" hidden aria-hidden="true"></div>
 
             <!-- Restart button positioned absolutely near grid -->
             <button id="btn-new-game" class="restart-btn" type="button" aria-label="New game">

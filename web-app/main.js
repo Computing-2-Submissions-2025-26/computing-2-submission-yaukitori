@@ -292,7 +292,7 @@ function start_chord_game() {
     listen_overlay.querySelector(".listen-prompt").textContent = "get ready...";
     listen_overlay.querySelector(".listen-sub").textContent = "";
     listen_overlay.removeAttribute("hidden");
-    get_audio();
+    Tone.start();
 
     melody_timeouts.push(setTimeout(function () {
         if (listen_overlay.hasAttribute("hidden")) { return; }
@@ -311,11 +311,12 @@ function start_chord_game() {
     }, 2000));
 }
 
-// ── Note → colour (exact from SVG + sharps) ───────────────
+// ── Note → colour (exact from SVG + sharps + octave-2 extensions) ──────
 const NOTE_COLOURS = {
     C: "#F17070",  D: "#F1A370",  E: "#EBF170",  F: "#7FF170",
     G: "#70E8F1",  A: "#7092F1",  B: "#B370F1",  C2: "#F170DC",
-    "C#": "#F18C70", "D#": "#F1C870", "F#": "#A8F170", "G#": "#70CDF1", "A#": "#707CF1"
+    "C#": "#F18C70", "D#": "#F1C870", "F#": "#A8F170", "G#": "#70CDF1", "A#": "#707CF1",
+    "C#2": "#F18C70", "D2": "#F1A370", "D#2": "#F1C870", "E2": "#EBF170"
 };
 
 // exact x and y layout tokens from SVG
@@ -367,32 +368,70 @@ const CHORD_DIFFICULTY_SETTINGS = {
     4: { count: 5, pool: CHORD_NOTES_ALL }
 };
 
-// ── Web Audio (piano synth) ───────────────────────────────
+// ── Piano audio: sampled grand piano + oscillator fallback ──
+const TONE_NOTE_NAMES = {
+    C: "C4",  D: "D4",   E: "E4",   F: "F4",
+    G: "G4",  A: "A4",   B: "B4",   C2: "C5",
+    "C#": "C#4", "D#": "D#4", "F#": "F#4", "G#": "G#4", "A#": "A#4",
+    "C#2": "C#5", "D2": "D5", "D#2": "D#5", "E2": "E5"
+};
+
 const FREQUENCIES = {
     C: 261.63, D: 293.66, E: 329.63, F: 349.23,
     G: 392.00, A: 440.00, B: 493.88, C2: 523.25,
-    "C#": 277.18, "D#": 311.13, "F#": 369.99, "G#": 415.30, "A#": 466.16
+    "C#": 277.18, "D#": 311.13, "F#": 369.99, "G#": 415.30, "A#": 466.16,
+    "C#2": 554.37, "D2": 587.33, "D#2": 622.25, "E2": 659.25
 };
 
-let audio_ctx = null;
+let piano_sampler = null;
+let piano_ready  = false;
+let fallback_ctx = null;
 
-function get_audio() {
-    if (!audio_ctx) { audio_ctx = new AudioContext(); }
-    if (audio_ctx.state === "suspended") { audio_ctx.resume(); }
-    return audio_ctx;
+function get_fallback_ctx() {
+    if (!fallback_ctx) { fallback_ctx = new AudioContext(); }
+    if (fallback_ctx.state === "suspended") { fallback_ctx.resume(); }
+    return fallback_ctx;
+}
+
+function init_piano() {
+    if (piano_sampler) { return; }
+    piano_sampler = new Tone.Sampler({
+        urls: {
+            A0: "A0.mp3", C1: "C1.mp3", "D#1": "Ds1.mp3", "F#1": "Fs1.mp3",
+            A1: "A1.mp3", C2: "C2.mp3", "D#2": "Ds2.mp3", "F#2": "Fs2.mp3",
+            A2: "A2.mp3", C3: "C3.mp3", "D#3": "Ds3.mp3", "F#3": "Fs3.mp3",
+            A3: "A3.mp3", C4: "C4.mp3", "D#4": "Ds4.mp3", "F#4": "Fs4.mp3",
+            A4: "A4.mp3", C5: "C5.mp3", "D#5": "Ds5.mp3", "F#5": "Fs5.mp3",
+            A5: "A5.mp3", C6: "C6.mp3"
+        },
+        baseUrl: "https://tonejs.github.io/audio/salamander/",
+        onload: function () { piano_ready = true; }
+    }).toDestination();
 }
 
 function play_note(note) {
-    const ctx = get_audio();
-    const t = ctx.currentTime;
-    const osc = ctx.createOscillator();
-    const g = ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(FREQUENCIES[note], t);
-    g.gain.setValueAtTime(0.45, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 1.2);
-    osc.connect(g); g.connect(ctx.destination);
-    osc.start(t); osc.stop(t + 1.2);
+    const tone_name = TONE_NOTE_NAMES[note];
+    const freq      = FREQUENCIES[note];
+    if (piano_ready && tone_name) {
+        // Real piano samples — triggerAttack lets the sample decay naturally.
+        Tone.start().then(function () {
+            piano_sampler.triggerAttack(tone_name, Tone.now());
+        });
+    } else if (freq) {
+        // Oscillator fallback while samples are still downloading.
+        const ctx  = get_fallback_ctx();
+        const t    = ctx.currentTime;
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(0.4, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 1.0);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 1.0);
+    }
 }
 
 // ── DOM helpers ───────────────────────────────────────────
@@ -447,7 +486,8 @@ function build_keyboard(keyboard_el, on_note) {
         const wrapper = el("div", "key-wrapper");
         const key = el("button", "piano-key", {
             "type": "button",
-            "aria-label": "Note " + note
+            "aria-label": "Note " + note,
+            "data-note": note
         });
         const img = el("img", "key-img", {
             "src": "images/" + note.toLowerCase() + ".svg",
@@ -476,7 +516,8 @@ function build_keyboard(keyboard_el, on_note) {
         if (kinfo.note) {
             const bkey = el("button", "black-key-btn", {
                 "type": "button",
-                "aria-label": "Note " + kinfo.note
+                "aria-label": "Note " + kinfo.note,
+                "data-note": kinfo.note
             });
             bkey.style.left = kinfo.x + "px";
             const band = el("div", "black-key-color-band");
@@ -637,6 +678,11 @@ const SHARP_KEYS = {
     "w": "C#", "e": "D#", "t": "F#", "y": "G#", "u": "A#"
 };
 
+// Extra keys — free play mode only (second octave extension)
+const FREE_EXTRA_KEYS = {
+    "o": "C#2", "l": "D2", "p": "D#2", ";": "E2"
+};
+
 // Note → key letter (reverse lookups for on-key labels)
 const NOTE_NUMBERS = Object.fromEntries(
     Object.entries(KEY_NOTES).map(function ([k, v]) { return [v, k]; })
@@ -664,9 +710,36 @@ function render_current_slots() {
     }
 }
 
+function press_key(note) {
+    const key_el = document.querySelector('#piano-keyboard [data-note="' + note + '"]');
+    if (key_el) { key_el.classList.add("key-pressed"); }
+}
+
+function release_key(note) {
+    const key_el = document.querySelector('#piano-keyboard [data-note="' + note + '"]');
+    if (key_el) { key_el.classList.remove("key-pressed"); }
+}
+
+function spawn_free_circle(note) {
+    const canvas = document.getElementById("free-play-canvas");
+    if (!canvas || canvas.hasAttribute("hidden")) { return; }
+    const r = 20;
+    const cw = canvas.offsetWidth || 1392;
+    const ch = canvas.offsetHeight || 425;
+    const x = r + Math.random() * Math.max(0, cw - 2 * r);
+    const y = r + Math.random() * Math.max(0, ch - 2 * r - 70);
+    const circle = el("div", "free-circle");
+    circle.style.left = (x - r) + "px";
+    circle.style.top = (y - r) + "px";
+    circle.style.background = NOTE_COLOURS[note];
+    canvas.appendChild(circle);
+    setTimeout(function () { if (circle.parentNode) { circle.remove(); } }, 1200);
+}
+
 function on_note(note) {
     if (ui.locked) { return; }
     if (ui.mode === "chord") { on_chord_note(note); return; }
+    if (ui.mode === "free") { spawn_free_circle(note); return; }
     if (is_over(ui.game)) { return; }
     const clen = get_code_length();
     if (ui.current_guess.length >= clen) { return; }
@@ -788,11 +861,25 @@ function show_game_over(won) {
 function start_new_game() {
     clear_melody_timeouts();
     document.getElementById("overlay-listen").setAttribute("hidden", "");
+    document.getElementById("free-play-canvas").setAttribute("hidden", "");
     ui.locked = false;
     set_keyboard_enabled(true);
     document.getElementById("piano-keyboard").classList.remove("keyboard--chord");
 
     if (ui.mode === "chord") { start_chord_game(); return; }
+
+    if (ui.mode === "free") {
+        document.getElementById("guess-board").innerHTML = "";
+        document.getElementById("overlay-gameover").setAttribute("hidden", "");
+        document.getElementById("overlay-howto").setAttribute("hidden", "");
+        document.getElementById("btn-hear-again").setAttribute("hidden", "");
+        document.getElementById("piano-keyboard").classList.add("keyboard--chord");
+        const canvas = document.getElementById("free-play-canvas");
+        canvas.innerHTML = "";
+        canvas.removeAttribute("hidden");
+        set_status("Free play — press any key to play notes!");
+        return;
+    }
 
     ui.game = null;
     let secret;
@@ -832,7 +919,7 @@ function start_new_game() {
         listen_overlay.querySelector(".listen-prompt").textContent = "get ready...";
         listen_overlay.querySelector(".listen-sub").textContent = "";
         listen_overlay.removeAttribute("hidden");
-        get_audio(); // unlock AudioContext while still in user-gesture call chain
+        Tone.start(); // unlock AudioContext while still in user-gesture call chain
         melody_timeouts.push(setTimeout(function () {
             if (listen_overlay.hasAttribute("hidden")) { return; }
             listen_overlay.querySelector(".listen-prompt").textContent = "listen carefully...";
@@ -855,6 +942,9 @@ function start_new_game() {
 // ── Init ──────────────────────────────────────────────────
 document.addEventListener("DOMContentLoaded", function () {
 
+    // Start preloading piano samples immediately
+    init_piano();
+
     // Build piano keyboard
     build_keyboard(document.getElementById("piano-keyboard"), on_note);
 
@@ -871,11 +961,12 @@ document.addEventListener("DOMContentLoaded", function () {
     function update_mode_button(btn) {
         const labels = {
             random: "random mode", melody: "melody mode",
-            perfect_pitch: "perfect pitch", chord: "chord mode"
+            perfect_pitch: "perfect pitch", chord: "chord mode",
+            free: "free play"
         };
         btn.textContent = labels[ui.mode];
         btn.classList.toggle("pill-btn--mode-active", ui.mode !== "random");
-        const modes = ["random", "melody", "perfect_pitch", "chord"];
+        const modes = ["random", "melody", "perfect_pitch", "chord", "free"];
         document.querySelectorAll(".mode-dot").forEach(function (dot, i) {
             dot.classList.toggle("mode-dot--active", modes[i] === ui.mode);
         });
@@ -892,6 +983,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (ui.mode === "random") { ui.mode = "melody"; }
         else if (ui.mode === "melody") { ui.mode = "perfect_pitch"; }
         else if (ui.mode === "perfect_pitch") { ui.mode = "chord"; }
+        else if (ui.mode === "chord") { ui.mode = "free"; }
         else { ui.mode = "random"; }
         update_mode_button(this);
         stop_youtube();
@@ -996,25 +1088,46 @@ document.addEventListener("DOMContentLoaded", function () {
                 set_status("Note removed. " + (get_code_length() - ui.current_guess.length) + " more needed.");
             }
         }
+        if (e.repeat) { return; }
         // Letter keys (a–k) play white notes
         const note = KEY_NOTES[e.key];
         const game_active = ui.mode === "chord"
             ? !chord_is_over(ui.chord_game)
-            : (ui.game && !is_over(ui.game));
+            : ui.mode === "free"
+                ? true
+                : (ui.game && !is_over(ui.game));
         if (note && !ui.locked && game_active) {
             play_note(note);
             on_note(note);
+            press_key(note);
         }
-        // Sharp keys (w,e,t,y,u) — only active in chord mode with sharps in pool
-        const sharps_enabled = ui.mode === "chord" &&
-            CHORD_DIFFICULTY_SETTINGS[ui.chord_difficulty].pool === CHORD_NOTES_ALL;
+        // Sharp keys (w,e,t,y,u) — active in chord mode with sharps, and always in free play
+        const sharps_enabled = ui.mode === "free" ||
+            (ui.mode === "chord" && CHORD_DIFFICULTY_SETTINGS[ui.chord_difficulty].pool === CHORD_NOTES_ALL);
         if (sharps_enabled) {
             const sharp_note = SHARP_KEYS[e.key];
-            if (sharp_note && !ui.locked && !chord_is_over(ui.chord_game)) {
+            const sharp_ok = ui.mode === "free" || !chord_is_over(ui.chord_game);
+            if (sharp_note && !ui.locked && sharp_ok) {
                 play_note(sharp_note);
                 on_note(sharp_note);
+                press_key(sharp_note);
             }
         }
+        // Extra keys (o,l,p,;) — free play mode only (second octave: C#2 D2 D#2 E2)
+        if (ui.mode === "free" && !ui.locked) {
+            const extra_note = FREE_EXTRA_KEYS[e.key];
+            if (extra_note) {
+                play_note(extra_note);
+                on_note(extra_note);
+            }
+        }
+    });
+
+    document.addEventListener("keyup", function (e) {
+        const note = KEY_NOTES[e.key];
+        if (note) { release_key(note); }
+        const sharp_note = SHARP_KEYS[e.key];
+        if (sharp_note) { release_key(sharp_note); }
     });
 
     // Exact scaling handler to make 1512x982 fit any screen

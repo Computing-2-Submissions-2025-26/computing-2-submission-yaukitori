@@ -1,5 +1,30 @@
 /* style.css — Piano keyboard layout */
 
+/* ── Free play canvas ──────────────────────────────────────── */
+#free-play-canvas {
+    position: absolute;
+    left: 60px;
+    top: 155px;
+    right: 60px;
+    height: 425px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+@keyframes free-circle-fall {
+    0%   { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(70px); }
+}
+
+.free-circle {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: free-circle-fall 1s ease-in forwards;
+}
+
 /* ── Keyboard frame ─────────────────────────────────────────────────── */
 .keyboard-section {
     background: #545184;
@@ -50,8 +75,13 @@
 
 /* Hover/press: mute the key colour */
 .piano-key:hover .key-img,
-.piano-key:active .key-img {
+.piano-key:active .key-img,
+.piano-key.key-pressed .key-img {
     filter: brightness(0.72);
+}
+
+.keyboard--chord .black-key-btn.key-pressed {
+    filter: brightness(0.8);
 }
 
 .piano-key:focus-visible {
