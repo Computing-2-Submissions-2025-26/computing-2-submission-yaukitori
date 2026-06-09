@@ -95,9 +95,9 @@
     </div>
 
     <!-- ── Perfect pitch listen overlay ─────────────────────── -->
-    <div id="overlay-listen" class="overlay" hidden>
+    <div id="overlay-listen" class="overlay" role="dialog" aria-modal="true" aria-labelledby="listen-prompt" hidden>
         <div class="overlay-card overlay-card--listen">
-            <p class="listen-prompt">listen carefully...</p>
+            <p id="listen-prompt" class="listen-prompt">listen carefully...</p>
             <p class="listen-sub">try and replay this melody on the piano</p>
             <button id="btn-cancel-listen" class="pill-btn pill-btn--large pill-btn--cancel" type="button">
                 cancel / switch modes
@@ -185,14 +185,14 @@
             <div class="howto-colours">
                 <h3>Note colours</h3>
                 <ul class="colour-key-list" aria-label="Note colour guide">
-                    <li><span class="colour-swatch" style="background:#F17070"></span> C</li>
-                    <li><span class="colour-swatch" style="background:#F1A370"></span> D</li>
-                    <li><span class="colour-swatch" style="background:#EBF170"></span> E</li>
-                    <li><span class="colour-swatch" style="background:#7FF170"></span> F</li>
-                    <li><span class="colour-swatch" style="background:#70E8F1"></span> G</li>
-                    <li><span class="colour-swatch" style="background:#7092F1"></span> A</li>
-                    <li><span class="colour-swatch" style="background:#B370F1"></span> B</li>
-                    <li><span class="colour-swatch" style="background:#F170DC"></span> C2</li>
+                    <li><span class="colour-swatch colour-swatch--c"></span> C</li>
+                    <li><span class="colour-swatch colour-swatch--d"></span> D</li>
+                    <li><span class="colour-swatch colour-swatch--e"></span> E</li>
+                    <li><span class="colour-swatch colour-swatch--f"></span> F</li>
+                    <li><span class="colour-swatch colour-swatch--g"></span> G</li>
+                    <li><span class="colour-swatch colour-swatch--a"></span> A</li>
+                    <li><span class="colour-swatch colour-swatch--b"></span> B</li>
+                    <li><span class="colour-swatch colour-swatch--c2"></span> C2</li>
                 </ul>
             </div>
                 </div><!-- end .howto-right -->
@@ -209,9 +209,9 @@
                             <li>Click a filled slot to remove that note from your guess.</li>
                             <li><strong>Backspace</strong> or <strong>Delete</strong> removes the last note added.</li>
                             <li>The <strong>eye button</strong> (top right) swaps peg colours — helpful if red and green are hard to tell apart:
-                                <ul style="margin-top:0.4rem;list-style:none;padding-left:0;display:flex;flex-direction:column;gap:0.25rem">
-                                    <li><span class="peg" style="background:#3D7EFF;display:inline-block;vertical-align:middle;margin-right:6px" aria-label="blue peg"></span> <strong>Blue:</strong> right note, right position.</li>
-                                    <li><span class="peg" style="background:#FF8800;border-radius:2px;transform:rotate(45deg);display:inline-block;vertical-align:middle;margin-right:6px" aria-label="orange diamond peg"></span> <strong>Orange:</strong> right note, wrong position.</li>
+                                <ul class="howto-a11y-list">
+                                    <li><span class="peg peg--a11y-blue" aria-label="blue peg"></span> <strong>Blue:</strong> right note, right position.</li>
+                                    <li><span class="peg peg--a11y-orange" aria-label="orange diamond peg"></span> <strong>Orange:</strong> right note, wrong position.</li>
                                 </ul>
                             </li>
                         </ul>

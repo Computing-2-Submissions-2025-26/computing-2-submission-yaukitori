@@ -19,7 +19,13 @@ const {
     get_remaining_attempts,
     get_secret,
     random_secret,
-    get_positional_feedback
+    random_chord_secret,
+    CHORD_MAX_ATTEMPTS,
+    chord_is_won,
+    chord_is_lost,
+    chord_is_over,
+    create_chord_game,
+    make_chord_guess
 } = Mastermind;
 
 // ── Melody mode: famous tune codes + descriptions ─────────
@@ -101,20 +107,7 @@ function set_keyboard_enabled(enabled) {
     kb.style.opacity = enabled ? "" : "0.45";
 }
 
-// ── Chord game helpers ────────────────────────────────────
-function chord_is_won(cg) {
-    return cg && cg.attempts.length > 0 &&
-        cg.attempts[cg.attempts.length - 1].feedback.every(function (f) { return f === "green"; });
-}
-
-function chord_is_lost(cg) {
-    return cg && cg.attempts.length >= CHORD_MAX_ATTEMPTS && !chord_is_won(cg);
-}
-
-function chord_is_over(cg) {
-    return chord_is_won(cg) || chord_is_lost(cg);
-}
-
+// ── Chord board builder ──────────────────────────────────────────────────────
 function build_chord_board(board_el, note_count) {
     board_el.innerHTML = "";
     const rows = [];
@@ -204,11 +197,10 @@ function on_chord_slot_click(row_idx, slot_idx) {
 }
 
 function submit_chord_guess() {
-    const guess = ui.chord_current.slice();
-    const feedback = guess.map(function (note) {
-        return ui.chord_secret.indexOf(note) !== -1 ? "green" : "empty";
-    });
-    ui.chord_game.attempts.push({ guess, feedback });
+    ui.chord_game = make_chord_guess(ui.chord_current.slice(), ui.chord_game);
+    const last = ui.chord_game.attempts[ui.chord_game.attempts.length - 1];
+    const guess = last.guess;
+    const feedback = last.feedback;
 
     const row = ui.chord_rows[ui.chord_active_row];
     row.big.classList.remove("chord-circle--active");
@@ -250,7 +242,7 @@ function show_chord_game_over(won) {
 
     const reveal = document.getElementById("secret-reveal");
     reveal.innerHTML = "";
-    ui.chord_secret.forEach(function (note) {
+    ui.chord_game.secret.forEach(function (note) {
         const s = el("button", "slot", {
             "aria-label": "Note " + note, "type": "button", "disabled": "true"
         });
@@ -270,9 +262,9 @@ function show_chord_game_over(won) {
 
 function start_chord_game() {
     const settings = CHORD_DIFFICULTY_SETTINGS[ui.chord_difficulty];
-    const pool = settings.pool.slice().sort(function () { return Math.random() - 0.5; });
-    ui.chord_secret = pool.slice(0, settings.count);
-    ui.chord_game = { secret: ui.chord_secret, attempts: [] };
+    ui.chord_game = create_chord_game(
+        random_chord_secret(Math.random, settings.count, settings.pool)
+    );
     ui.chord_current = [];
     ui.chord_active_row = 0;
 
@@ -299,13 +291,15 @@ function start_chord_game() {
         const count = settings.count;
         listen_overlay.querySelector(".listen-prompt").textContent = "listen carefully...";
         listen_overlay.querySelector(".listen-sub").textContent = "identify these " + count + " notes";
-        ui.chord_secret.forEach(function (note) { play_note(note); });
+        ui.chord_game.secret.forEach(function (note) { play_note(note); });
         melody_timeouts.push(setTimeout(function () {
             if (listen_overlay.hasAttribute("hidden")) { return; }
             listen_overlay.setAttribute("hidden", "");
             ui.locked = false;
             set_keyboard_enabled(true);
-            document.getElementById("btn-hear-again").removeAttribute("hidden");
+            const hear_btn = document.getElementById("btn-hear-again");
+            hear_btn.setAttribute("aria-label", "Hear the chord again");
+            hear_btn.removeAttribute("hidden");
             set_status("Chord mode — identify all " + count + " notes in " + CHORD_MAX_ATTEMPTS + " tries!");
         }, 1800));
     }, 2000));
@@ -357,7 +351,6 @@ const BLACK_KEYS = [
 ];
 
 // ── Chord mode constants ──────────────────────────────────
-const CHORD_MAX_ATTEMPTS = 5;
 const CHORD_COLUMN_XS = [438, 575, 712, 849, 986];
 const CHORD_NOTES_WHITE = ["C", "D", "E", "F", "G", "A", "B", "C2"];
 const CHORD_NOTES_ALL = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B", "C2"];
@@ -407,6 +400,22 @@ function init_piano() {
         baseUrl: "https://tonejs.github.io/audio/salamander/",
         onload: function () { piano_ready = true; }
     }).toDestination();
+}
+
+// ── Button click sounds (one per button, user picks favourite) ─
+const CLICK_AUDIO = {
+    "btn-mode":        new Audio("sounds/click_c.mp3"),
+    "btn-how-to-play": new Audio("sounds/click_c.mp3"),
+    "btn-new-game":    new Audio("sounds/click_c.mp3"),
+    "btn-a11y":        new Audio("sounds/click_c.mp3")
+};
+Object.values(CLICK_AUDIO).forEach(function (a) { a.load(); });
+
+function play_click_for(id) {
+    const a = CLICK_AUDIO[id];
+    if (!a) { return; }
+    a.currentTime = 0;
+    a.play().catch(function () {});
 }
 
 function play_note(note) {
@@ -622,23 +631,20 @@ function build_board(board_el, code_length) {
 }
 
 // ── Render a completed attempt column ─────────────────────
-function render_attempt(row_obj, guess) {
-    guess.forEach(function (note, i) {
+function render_attempt(row_obj, attempt) {
+    attempt.guess.forEach(function (note, i) {
         set_slot_colour(row_obj.slot_els[i], note);
         row_obj.slot_els[i].disabled = true;
         row_obj.slot_els[i].style.cursor = "default";
-        // Completed slots are not interactive — remove the "click to remove" hint
         row_obj.slot_els[i].setAttribute("aria-label", "Note " + note);
     });
 
-    const colours = get_positional_feedback(get_secret(ui.game), guess);
-
     row_obj.peg_els.forEach(function (peg, i) {
         peg.classList.remove("peg--green", "peg--red");
-        if (colours[i] === "green") {
+        if (attempt.feedback[i] === "green") {
             peg.classList.add("peg--green");
             peg.setAttribute("aria-label", "Correct position");
-        } else if (colours[i] === "red") {
+        } else if (attempt.feedback[i] === "red") {
             peg.classList.add("peg--red");
             peg.setAttribute("aria-label", "Note present, wrong position");
         } else {
@@ -659,8 +665,7 @@ const ui = {
     locked: false,
     a11y: false,
     // Chord mode state
-    chord_game: null,     // { secret: string[], attempts: [] }
-    chord_secret: [],
+    chord_game: null,
     chord_current: [],
     chord_rows: [],
     chord_active_row: 0,
@@ -832,10 +837,10 @@ function on_slot_click(row_idx, slot_idx) {
 
 function submit_guess() {
     const attempt_idx = ui.active_row;
-    ui.game = make_guess(ui.game, ui.current_guess.slice());
+    ui.game = make_guess(ui.current_guess.slice(), ui.game);
 
     const attempt = get_attempts(ui.game)[attempt_idx];
-    render_attempt(ui.board_rows[attempt_idx], attempt.guess);
+    render_attempt(ui.board_rows[attempt_idx], attempt);
 
     ui.current_guess = [];
     ui.active_row += 1;
@@ -846,8 +851,14 @@ function submit_guess() {
         show_game_over(false);
     } else {
         highlight_active_row();
+        const greens = attempt.feedback.filter(
+            function (c) { return c === "green"; }
+        ).length;
+        const reds = attempt.feedback.filter(
+            function (c) { return c === "red"; }
+        ).length;
         set_status(
-            attempt.feedback.greens + " green, " + attempt.feedback.reds +
+            greens + " green, " + reds +
             " red. " + get_remaining_attempts(ui.game) + " attempts left."
         );
     }
@@ -967,7 +978,7 @@ function start_new_game() {
         secret = PERFECT_PITCH_MELODIES[idx].code.slice();
     } else {
         ui.melody_idx = -1;
-        secret = random_secret(NOTES);
+        secret = random_secret(Math.random, NOTES);
     }
 
     ui.game = create_game(secret);
@@ -998,7 +1009,9 @@ function start_new_game() {
                 listen_overlay.setAttribute("hidden", "");
                 ui.locked = false;
                 set_keyboard_enabled(true);
-                document.getElementById("btn-hear-again").removeAttribute("hidden");
+                const hear_pp = document.getElementById("btn-hear-again");
+                hear_pp.setAttribute("aria-label", "Hear the melody again");
+                hear_pp.removeAttribute("hidden");
                 set_status("Now try to replay those 6 notes!");
             });
         }, 2000));
@@ -1014,6 +1027,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Start preloading piano samples immediately
     init_piano();
+
+    // Button click sounds — different file on each, user picks favourite
+    ["btn-mode", "btn-how-to-play", "btn-new-game", "btn-a11y"].forEach(function (id) {
+        document.getElementById(id).addEventListener("click", function () {
+            play_click_for(id);
+        });
+    });
 
     // Build piano keyboard
     build_keyboard(document.getElementById("piano-keyboard"), on_note);
@@ -1083,7 +1103,7 @@ document.addEventListener("DOMContentLoaded", function () {
             ui.locked = true;
             btn.disabled = true;
             set_keyboard_enabled(false);
-            ui.chord_secret.forEach(function (note) { play_note(note); });
+            ui.chord_game.secret.forEach(function (note) { play_note(note); });
             melody_timeouts.push(setTimeout(function () {
                 ui.locked = false;
                 btn.disabled = false;
@@ -1110,7 +1130,12 @@ document.addEventListener("DOMContentLoaded", function () {
         set_keyboard_enabled(true);
         // Only surface hear-again in modes where it belongs
         if (ui.mode === "perfect_pitch" || ui.mode === "chord") {
-            document.getElementById("btn-hear-again").removeAttribute("hidden");
+            const hear_restart = document.getElementById("btn-hear-again");
+            hear_restart.setAttribute(
+                "aria-label",
+                ui.mode === "chord" ? "Hear the chord again" : "Hear the melody again"
+            );
+            hear_restart.removeAttribute("hidden");
             set_status("Use the \"hear it again\" button when you're ready.");
         }
     });

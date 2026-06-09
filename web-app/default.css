@@ -1095,3 +1095,39 @@ html, body {
     border-radius: 2px;
     transform: rotate(45deg);
 }
+
+/* ── Note colour swatches in how-to-play dialog ─────────── */
+.colour-swatch--c  { background: var(--C); }
+.colour-swatch--d  { background: var(--D); }
+.colour-swatch--e  { background: var(--E); }
+.colour-swatch--f  { background: var(--F); }
+.colour-swatch--g  { background: var(--G); }
+.colour-swatch--a  { background: var(--A); }
+.colour-swatch--b  { background: var(--B); }
+.colour-swatch--c2 { background: var(--C2); }
+
+/* ── Static a11y peg examples in how-to-play dialog ─────── */
+.howto-a11y-list {
+    margin-top: 0.4rem;
+    list-style: none;
+    padding-left: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.peg--a11y-blue {
+    background: #3D7EFF;
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 6px;
+}
+
+.peg--a11y-orange {
+    background: #FF8800;
+    border-radius: 2px;
+    transform: rotate(45deg);
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 6px;
+}
