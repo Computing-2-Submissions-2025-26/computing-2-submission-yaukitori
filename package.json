@@ -15,6 +15,7 @@
     "ramda": "^0.32.0"
   },
   "devDependencies": {
+    "@jslint-org/jslint": "^2026.4.30",
     "docdash": "^2.0.2",
     "jsdoc": "^4.0.4",
     "mocha": "^11.7.5"

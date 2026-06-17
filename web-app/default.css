@@ -20,11 +20,14 @@
     --B: #B370F1;
     --C2: #F170DC;
 
-    --peg-green: #7FF170; /* Exact color of green peg from SVG is #7FF170 or custom green */
-    --peg-red: #F17070;   /* Red peg is #F17070 matching C */
+    --peg-green: #7FF170;
+    --peg-red: #F17070;
     --peg-empty: #F0F0FA;
 
     --font: 'Montserrat', system-ui, sans-serif;
+
+    /* Scaling: set by JS (resize_game), applied here */
+    --game-scale: 1;
 }
 
 /* ── Reset ───────────────────────────────────────────────── */
@@ -45,9 +48,6 @@ html, body {
     background: #ffffff;
     font-family: var(--font);
     overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
 
 /* Screen-reader only */
@@ -68,11 +68,13 @@ html, body {
     width: 1512px;
     height: 982px;
     background: #ffffff;
-    position: relative;
+    position: absolute;
+    left: calc((100vw - 1512px * var(--game-scale)) / 2);
+    top: calc((100vh - 982px * var(--game-scale)) / 2);
+    transform: scale(var(--game-scale));
+    transform-origin: top left;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
     overflow: hidden;
-    flex-shrink: 0;
-    transform-origin: top left;
 }
 
 /* ── Logo & Texts (Absolute from SVG) ───────────────────── */
@@ -390,6 +392,11 @@ html, body {
     position: relative;
     width: 100%;
     height: 100%;
+}
+
+.keyboard--disabled {
+    opacity: 0.45;
+    pointer-events: none;
 }
 
 /* ── Stationary Note Color Bands (top of playable keys) ── */
@@ -959,10 +966,12 @@ html, body {
 
 .chord-note-circle--correct {
     box-shadow: 0 0 0 3px var(--peg-green);
+    pointer-events: none;
 }
 
 .chord-note-circle--wrong {
     opacity: 0.38;
+    pointer-events: none;
 }
 
 /* ── Cancel button style in listen overlay ──────────────── */
@@ -1131,3 +1140,122 @@ html, body {
     vertical-align: middle;
     margin-right: 6px;
 }
+
+/* ── Note colours — applied via data-note attribute ─────────────────────── */
+/* Targets: .slot, .chord-note-circle, .free-circle, .black-key-color-band  */
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="A"]   { background-color: #7092F1; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="A#"]  { background-color: #707CF1; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="B"]   { background-color: #B370F1; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="C"]   { background-color: #F17070; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="C#"]  { background-color: #F18C70; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="C#2"] { background-color: #F18C70; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="C2"]  { background-color: #F170DC; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="D"]   { background-color: #F1A370; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="D#"]  { background-color: #F1C870; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="D#2"] { background-color: #F1C870; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="D2"]  { background-color: #F1A370; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="E"]   { background-color: #EBF170; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="E2"]  { background-color: #EBF170; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="F"]   { background-color: #7FF170; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="F#"]  { background-color: #A8F170; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="G"]   { background-color: #70E8F1; }
+:is(.black-key-color-band, .chord-note-circle, .free-circle,
+    .slot)[data-note="G#"]  { background-color: #70CDF1; }
+
+/* Disabled reveal slots: CSS handles cursor; no inline style needed */
+.slot:disabled,
+.slot[disabled] { cursor: default; }
+
+/* ── Black key horizontal positions (relative to .keyboard div) ──────────── */
+.black-key                           { left: 687px; }
+.black-key-btn[data-note="A#"]       { left: 511px; }
+.black-key-btn[data-note="C#"]       { left: 71px; }
+.black-key-btn[data-note="D#"]       { left: 159px; }
+.black-key-btn[data-note="F#"]       { left: 336px; }
+.black-key-btn[data-note="G#"]       { left: 423px; }
+.black-key-shadow:not([data-note])   { left: 682px; }
+.black-key-shadow[data-note="A#"]    { left: 506px; }
+.black-key-shadow[data-note="C#"]    { left: 66px; }
+.black-key-shadow[data-note="D#"]    { left: 154px; }
+.black-key-shadow[data-note="F#"]    { left: 331px; }
+.black-key-shadow[data-note="G#"]    { left: 418px; }
+
+/* ── Guess board column positions ───────────────────────────────────────── */
+.guess-column          { top: 213px; }
+.guess-column--long    { top: 197px; }
+.guess-column:nth-child(1)  { left: 324px; }
+.guess-column:nth-child(2)  { left: 416px; }
+.guess-column:nth-child(3)  { left: 508px; }
+.guess-column:nth-child(4)  { left: 599px; }
+.guess-column:nth-child(5)  { left: 692px; }
+.guess-column:nth-child(6)  { left: 783.5px; }
+.guess-column:nth-child(7)  { left: 874px; }
+.guess-column:nth-child(8)  { left: 966px; }
+.guess-column:nth-child(9)  { left: 1057px; }
+.guess-column:nth-child(10) { left: 1144px; }
+
+/* ── Slot vertical positions within columns ─────────────────────────────── */
+.slot                       { left: 0; }
+.slot:nth-child(1)          { top: 0; }
+.slot:nth-child(2)          { top: 60.5px; }
+.slot:nth-child(3)          { top: 121px; }
+.slot:nth-child(4)          { top: 183px; }
+
+.guess-column--long .slot   { left: 4px; }
+.guess-column--long .slot:nth-child(1) { top: 0; }
+.guess-column--long .slot:nth-child(2) { top: 50px; }
+.guess-column--long .slot:nth-child(3) { top: 100px; }
+.guess-column--long .slot:nth-child(4) { top: 150px; }
+.guess-column--long .slot:nth-child(5) { top: 200px; }
+.guess-column--long .slot:nth-child(6) { top: 250px; }
+
+/* ── Peg positions within columns ───────────────────────────────────────── */
+.guess-column--long .peg-grid  { top: 308px; }
+
+.peg:nth-child(1)  { left: 5.5px; top: 0; }
+.peg:nth-child(2)  { left: 28px;  top: 0; }
+.peg:nth-child(3)  { left: 5.5px; top: 23px; }
+.peg:nth-child(4)  { left: 28px;  top: 23px; }
+
+.guess-column--long .peg:nth-child(1) { left: 2px;  top: 0; }
+.guess-column--long .peg:nth-child(2) { left: 16px; top: 0; }
+.guess-column--long .peg:nth-child(3) { left: 30px; top: 0; }
+.guess-column--long .peg:nth-child(4) { left: 2px;  top: 22px; }
+.guess-column--long .peg:nth-child(5) { left: 16px; top: 22px; }
+.guess-column--long .peg:nth-child(6) { left: 30px; top: 22px; }
+
+/* ── Chord board circle sizes and positions ──────────────────────────────── */
+.chord-circle {
+    height: 132px;
+    top: 299px;
+    width: 132px;
+}
+.chord-circle:nth-child(1) { left: 372px; }
+.chord-circle:nth-child(2) { left: 509px; }
+.chord-circle:nth-child(3) { left: 646px; }
+.chord-circle:nth-child(4) { left: 783px; }
+.chord-circle:nth-child(5) { left: 920px; }
+
+.chord-note-circle {
+    height: 44px;
+    width: 44px;
+}
+
+/* Physics free-circles start at top; left is set per-spawn by JS */
+.free-circle--physics { top: 0; }
