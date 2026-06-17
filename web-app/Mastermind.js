@@ -5,8 +5,7 @@
 
 import R from "./ramda.js";
 
-// ── Type definitions ─────────────────────────────────────────────────────────
-
+// ── Type definitions ──
 /**
  * One of the playable note strings, e.g. "C", "D", … "C2".
  * @typedef {string} Note
