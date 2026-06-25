@@ -736,7 +736,7 @@ function build_board(board_el, code_length) {
         const peg_grid = el(
             "div",
             "peg-grid",
-            {"aria-label": "Feedback pegs"}
+            {"aria-label": "Feedback pegs", "role": "group"}
         );
         const peg_els = [];
         Array.from(new Array(code_length).keys()).forEach(function () {
@@ -803,6 +803,7 @@ function render_attempt(row_obj, attempt) {
 
     row_obj.peg_els.forEach(function (peg, i) {
         peg.classList.remove("peg--green", "peg--red");
+        peg.setAttribute("role", "img");
         if (attempt.feedback[i] === "green") {
             peg.classList.add("peg--green");
             peg.setAttribute("aria-label", "Correct position");
@@ -1638,7 +1639,63 @@ document.addEventListener("DOMContentLoaded", function () {
                 "overlay-gameover"
             ).setAttribute("hidden", "");
             stop_youtube();
+            const listen_overlay = document.getElementById("overlay-listen");
+            if (!listen_overlay.hasAttribute("hidden")) {
+                document.getElementById("btn-cancel-listen").click();
+            }
         }
+    });
+
+    document.addEventListener("keydown", function (e) {
+        if (e.key !== "Tab") {
+            return;
+        }
+        const open_overlay = [
+            "overlay-gameover",
+            "overlay-listen",
+            "overlay-howto"
+        ].map(function (id) {
+            return document.getElementById(id);
+        }).find(function (overlay) {
+            return !overlay.hasAttribute("hidden");
+        });
+        if (!open_overlay) {
+            return;
+        }
+        const selector = [
+            "button:not([disabled])",
+            "a[href]",
+            "[tabindex]:not([tabindex='-1'])"
+        ].join(", ");
+        const focusable = Array.from(
+            open_overlay.querySelectorAll(selector)
+        ).filter(function (el) {
+            return !el.hasAttribute("hidden") && el.offsetParent !== null;
+        });
+        if (focusable.length === 0) {
+            return;
+        }
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (!open_overlay.contains(document.activeElement)) {
+            e.preventDefault();
+            first.focus();
+            return;
+        }
+        if (e.shiftKey) {
+            if (document.activeElement === first) {
+                e.preventDefault();
+                last.focus();
+            }
+        } else {
+            if (document.activeElement === last) {
+                e.preventDefault();
+                first.focus();
+            }
+        }
+    });
+
+    document.addEventListener("keydown", function (e) {
         if (e.key === "Backspace" || e.key === "Delete") {
             if (
                 ui.mode === "chord" &&

@@ -3,7 +3,7 @@
    Pixel-perfect styling representing the 1512 × 982 SVG design.
    ================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap');
 
 :root {
     --purple: #545184;
@@ -24,7 +24,7 @@
     --peg-red: #F17070;
     --peg-empty: #F0F0FA;
 
-    --font: 'Montserrat', system-ui, sans-serif;
+    --font: 'Manrope', system-ui, sans-serif;
 
     /* Scaling: set by JS (resize_game), applied here */
     --game-scale: 1;
@@ -47,6 +47,7 @@ html, body {
     padding: 0;
     background: #ffffff;
     font-family: var(--font);
+    font-weight: 300;
     overflow: hidden;
 }
 
@@ -355,6 +356,7 @@ html, body {
     background: var(--peg-empty);
     display: block;
     transition: background 0.22s;
+    border: 1.5px solid var(--purple-mid);
 }
 
 .peg--green {
@@ -682,7 +684,6 @@ html, body {
 .mode-desc--hint {
     font-size: 0.78rem;
     margin-top: 0.4rem;
-    opacity: 0.8;
 }
 
 .langer-btn {
@@ -714,6 +715,7 @@ html, body {
     position: relative; /* Keeps flow layout but lets .slot-label centre within slot */
     cursor: default;
 }
+#secret-reveal .slot { top: auto; left: auto; }
 
 /* How-to-play modal elements */
 .howto-list {

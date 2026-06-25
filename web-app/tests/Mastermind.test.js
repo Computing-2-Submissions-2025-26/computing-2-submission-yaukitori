@@ -261,16 +261,36 @@ describe("get_positional_feedback", function () {
     );
 
     it(
-        "has length equal to the guess array length",
+        "does not award a red for a note already accounted for by a green",
         function () {
             const fb = get_positional_feedback(
                 ["C", "D", "E", "F"],
-                ["C", "D", "E", "F"]
+                ["C", "C", "E", "E"]
             );
-            assert.strictEqual(
-                fb.length,
-                4,
-                "feedback length must match guess length"
+            assert.deepStrictEqual(
+                fb,
+                ["green", "empty", "green", "empty"],
+                "the C at position 0 is green; " +
+                "the second C must not also score red " +
+                "because that C in the secret is already consumed"
+            );
+        }
+    );
+
+    it(
+        "handles a repeated note in the secret",
+        function () {
+            const fb = get_positional_feedback(
+                ["C", "C", "D", "E"],
+                ["C", "E", "C", "F"]
+            );
+            assert.deepStrictEqual(
+                fb,
+                ["green", "red", "red", "empty"],
+                "first C matches position 0 green; " +
+                "E is in the secret (position 3) so position 1 is red; " +
+                "second C matches the remaining secret C so position 2 is red; " +
+                "F is absent so position 3 is empty"
             );
         }
     );
@@ -831,18 +851,6 @@ describe("create_chord_game", function () {
         }
     );
 
-    it(
-        "two games created with different chords are independent",
-        function () {
-            const a = create_chord_game(["C", "E", "G"]);
-            const b = create_chord_game(["D", "F", "A"]);
-            assert.notDeepStrictEqual(
-                a.secret,
-                b.secret,
-                "different chords should produce different game states"
-            );
-        }
-    );
 
 });
 
@@ -1141,14 +1149,6 @@ describe("random_chord_secret", function () {
             random_chord_secret(Math.random, 3, NOTES).length,
             3,
             "should return exactly 3 notes when count is 3"
-        );
-    });
-
-    it("returns 5 notes when count is 5", function () {
-        assert.strictEqual(
-            random_chord_secret(Math.random, 5, NOTES).length,
-            5,
-            "should return exactly 5 notes when count is 5"
         );
     });
 

@@ -111,7 +111,7 @@
             <h2 id="gameover-title" class="overlay-title"></h2>
             <p id="gameover-body" class="overlay-body"></p>
             <p id="gameover-desc" class="overlay-body overlay-body--desc" hidden></p>
-            <div class="secret-reveal" id="secret-reveal" aria-label="The secret code was"></div>
+            <div class="secret-reveal" id="secret-reveal" role="group" aria-label="The secret code was"></div>
             <div class="gameover-actions">
                 <button id="btn-listen" class="pill-btn pill-btn--large pill-btn--listen" type="button" hidden>
                     listen to it (this takes you to youtube)
@@ -175,9 +175,9 @@
                     </div>
                     It is colour coded as follows:
                     <ul>
-                        <li><span class="peg peg--green" aria-label="green peg"></span> <strong>Green:</strong> right note, right position.</li>
-                        <li><span class="peg peg--red" aria-label="red peg"></span> <strong>Red:</strong> right note, wrong position.</li>
-                        <li><span class="peg" aria-label="empty peg"></span> <strong>Empty:</strong> that note is not in the secret at all.</li>
+                        <li><span class="peg peg--green" role="img" aria-label="green peg"></span> <strong>Green:</strong> right note, right position.</li>
+                        <li><span class="peg peg--red" role="img" aria-label="red peg"></span> <strong>Red:</strong> right note, wrong position.</li>
+                        <li><span class="peg" role="img" aria-label="empty peg"></span> <strong>Empty:</strong> that note is not in the secret at all.</li>
                     </ul>
                 </li>
                 <li>You have 10 attempts per game. Good luck and have fun!</li>
@@ -210,8 +210,8 @@
                             <li><strong>Backspace</strong> or <strong>Delete</strong> removes the last note added.</li>
                             <li>The <strong>eye button</strong> (top right) swaps peg colours — helpful if red and green are hard to tell apart:
                                 <ul class="howto-a11y-list">
-                                    <li><span class="peg peg--a11y-blue" aria-label="blue peg"></span> <strong>Blue:</strong> right note, right position.</li>
-                                    <li><span class="peg peg--a11y-orange" aria-label="orange diamond peg"></span> <strong>Orange:</strong> right note, wrong position.</li>
+                                    <li><span class="peg peg--a11y-blue" role="img" aria-label="blue peg"></span> <strong>Blue:</strong> right note, right position.</li>
+                                    <li><span class="peg peg--a11y-orange" role="img" aria-label="orange diamond peg"></span> <strong>Orange:</strong> right note, wrong position.</li>
                                 </ul>
                             </li>
                         </ul>

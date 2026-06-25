@@ -15,9 +15,11 @@
     "ramda": "^0.32.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@jslint-org/jslint": "^2026.4.30",
     "docdash": "^2.0.2",
     "jsdoc": "^4.0.4",
-    "mocha": "^11.7.5"
+    "mocha": "^11.7.5",
+    "playwright": "^1.61.1"
   }
 }

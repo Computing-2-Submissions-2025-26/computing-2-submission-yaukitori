@@ -1,17 +1,5 @@
 /**
  * @module Mastermind
- * Pure game-logic module for Piano Mastermind — no DOM, no side-effects.
- *
- * Functional patterns demonstrated:
- *  - **Composition** — R.pipe chains accessors and the two-pass scoring
- *    pipeline; R.either composes boolean predicates.
- *  - **Map / filter / reduce** — R.map, R.filter, R.reduce throughout;
- *    R.reduce drives both scoring passes and chord sampling.
- *  - **Partial application** — every multi-argument function is wrapped
- *    with R.curry, enabling e.g. get_feedback(secret) or
- *    make_guess(guess) to return a ready-to-use function.
- *  - **Immutable state** — R.over + R.lensProp applies R.append through
- *    a lens so make_guess / make_chord_guess never mutate their input.
  */
 
 import R from "./ramda.js";
@@ -33,8 +21,11 @@ import R from "./ramda.js";
  */
 
 /**
- * The result of scoring a guess — counts of correct and misplaced notes.
- * @typedef {{ greens: number, reds: number }} Feedback
+ * The result of scoring a guess - counts of correct and misplaced notes.
+ * @typedef {Object} Feedback
+ * @property {number} greens - Notes correct in both value and position.
+ * @property {number} reds   - Notes present in the secret but in the
+ *     wrong position.
  */
 
 /**
@@ -45,12 +36,16 @@ import R from "./ramda.js";
 
 /**
  * A single recorded attempt, pairing the guess with its feedback.
- * @typedef {{ feedback: PegColour[], guess: Guess }} Attempt
+ * @typedef {Object} Attempt
+ * @property {Guess}       guess    - The notes the player guessed.
+ * @property {PegColour[]} feedback - Per-position colour for each guessed note.
  */
 
 /**
  * The complete game state: the secret code and all attempts made so far.
- * @typedef {{ attempts: Attempt[], secret: Secret }} Game
+ * @typedef {Object} Game
+ * @property {Secret}    secret   - The hidden code for this game.
+ * @property {Attempt[]} attempts - All guesses made so far, in order.
  */
 
 /**
@@ -60,12 +55,17 @@ import R from "./ramda.js";
 
 /**
  * A single chord attempt.
- * @typedef {{ feedback: ChordFeedback[], guess: Note[] }} ChordAttempt
+ * @typedef {Object} ChordAttempt
+ * @property {Note[]}          guess    - The notes the player guessed.
+ * @property {ChordFeedback[]} feedback - Green for each note in the
+ *     chord, empty otherwise.
  */
 
 /**
  * Chord game state.
- * @typedef {{ attempts: ChordAttempt[], secret: Note[] }} ChordGame
+ * @typedef {Object} ChordGame
+ * @property {Note[]}          secret   - The chord the player must identify.
+ * @property {ChordAttempt[]}  attempts - All guesses made so far, in order.
  */
 
 // ── Constants ────────────────────────────────────────────────────────────────
@@ -88,9 +88,10 @@ const MAX_ATTEMPTS = 10;
  * A red peg means the note appears in the secret but in a different position.
  * Each note in the secret can only account for one peg.
  *
- * Curried — partially apply the secret to get a reusable scorer:
+ * Curried - partially apply the secret to get a reusable scorer:
  * `const score = get_feedback(secret); score(guess1); score(guess2);`
  *
+ * @function get_feedback
  * @param {Secret} secret - The hidden code chosen by the computer.
  * @param {Guess}  guess  - The player's attempt, same length as secret.
  * @returns {Feedback} Object with `greens` and `reds` counts.
@@ -125,19 +126,20 @@ const get_feedback = R.curry(function (secret, guess) {
 });
 
 /**
- * Return per-position feedback for a guess — "green", "red", or "empty"
+ * Return per-position feedback for a guess - "green", "red", or "empty"
  * for each slot.
  *
  * Unlike {@link get_feedback} which returns counts, this maps each
  * position directly to a colour so the UI can label individual pegs.
  * Green means right note, right position; red means right note, wrong
  * position; empty means that note does not appear in the secret at all.
- * Each note in the secret can only account for one peg — a note cannot
+ * Each note in the secret can only account for one peg - a note cannot
  * score both a green and a red simultaneously.
  *
- * Curried — partially apply the secret:
+ * Curried - partially apply the secret:
  * `const score_pos = get_positional_feedback(secret);`
  *
+ * @function get_positional_feedback
  * @param {Secret} secret - The hidden code.
  * @param {Guess}  guess  - The player's attempt.
  * @returns {PegColour[]} Array of peg colours, one per position.
@@ -154,7 +156,7 @@ const get_positional_feedback = R.curry(function (secret, guess) {
         pool: R.clone(secret)
     };
 
-    // Pass 1 — mark exact matches green; remove them from the pool
+    // Pass 1 - mark exact matches green; remove them from the pool
     // so they cannot also claim a red peg.
     const mark_green = function (acc, i) {
         return (
@@ -167,7 +169,7 @@ const get_positional_feedback = R.curry(function (secret, guess) {
         );
     };
 
-    // Pass 2 — for each non-green slot, claim a matching pool note
+    // Pass 2 - for each non-green slot, claim a matching pool note
     // and mark it red.
     const mark_red = function (acc, i) {
         const idx = (
@@ -230,9 +232,10 @@ function is_lost(game) {
 }
 
 /**
- * Return true if the game has ended — either the player won or all
+ * Return true if the game has ended - either the player won or all
  * attempts have been used.
  *
+ * @function is_over
  * @param {Game} game
  * @returns {boolean}
  *
@@ -264,15 +267,16 @@ function create_game(secret) {
 
 /**
  * Return a new game state with the guess (and its feedback) appended.
- * The original game state is never modified — each call returns a fresh
+ * The original game state is never modified - each call returns a fresh
  * game object with the new attempt added.
  *
  * If the game is already over (won or lost), the state is returned
- * unchanged — extra guesses are silently ignored.
+ * unchanged - extra guesses are silently ignored.
  *
- * Curried — partially apply the guess:
+ * Curried - partially apply the guess:
  * `const try_c = make_guess(["C","C","C","C"]);`
  *
+ * @function make_guess
  * @param {Guess} guess - The player's new guess.
  * @param {Game}  game  - Current game state.
  * @returns {Game} Updated game state.
@@ -302,6 +306,7 @@ const make_guess = R.curry(function (guess, game) {
 /**
  * Return the list of all attempts made so far.
  *
+ * @function get_attempts
  * @param {Game} game
  * @returns {Attempt[]}
  *
@@ -313,6 +318,7 @@ const get_attempts = R.pipe(R.prop("attempts"), R.clone);
 /**
  * Return the number of attempts made so far.
  *
+ * @function get_attempt_count
  * @param {Game} game
  * @returns {number}
  *
@@ -324,6 +330,7 @@ const get_attempt_count = R.pipe(R.prop("attempts"), R.length);
 /**
  * Return the number of attempts still available.
  *
+ * @function get_remaining_attempts
  * @param {Game} game
  * @returns {number}
  *
@@ -339,6 +346,7 @@ const get_remaining_attempts = R.pipe(
 /**
  * Return the secret code for the current game.
  *
+ * @function get_secret
  * @param {Game} game
  * @returns {Secret}
  *
@@ -353,9 +361,10 @@ const get_secret = R.pipe(R.prop("secret"), R.clone);
  * Generate a random secret of length CODE_LENGTH by sampling from `notes`
  * with replacement (same note may appear more than once).
  *
- * Curried — partially apply the rng:
+ * Curried - partially apply the rng:
  * `const make_secret = random_secret(Math.random);`
  *
+ * @function random_secret
  * @param {function(): number} rng   - Zero-argument function returning a
  *   number in [0, 1). Pass `Math.random` for normal play.
  * @param {Note[]} notes - Pool of notes to draw from (typically NOTES).
@@ -383,13 +392,14 @@ const CHORD_MAX_ATTEMPTS = 5;
 
 /**
  * Sample `count` unique notes from `pool` without replacement.
- * No note appears twice in the result — each selected note is excluded
+ * No note appears twice in the result - each selected note is excluded
  * from the draw for subsequent picks. Each call with a seeded rng
  * produces the same result (pure, deterministic).
  *
- * Curried — partially apply rng + count:
+ * Curried - partially apply rng + count:
  * `const pick3 = random_chord_secret(Math.random, 3);`
  *
+ * @function random_chord_secret
  * @param {function(): number} rng   - Zero-argument function returning a
  *   number in [0, 1). Pass `Math.random` for normal play.
  * @param {number} count - Number of notes to pick.
@@ -418,12 +428,13 @@ const random_chord_secret = R.curry(function (rng, count, pool) {
 });
 
 /**
- * Score a chord guess — "green" for each note present in the chord,
+ * Score a chord guess - "green" for each note present in the chord,
  * "empty" for each note absent.
  *
- * Curried — partially apply the secret:
+ * Curried - partially apply the secret:
  * `const score = get_chord_feedback(secret); score(guess1); score(guess2);`
  *
+ * @function get_chord_feedback
  * @param {Note[]} secret - The chord: notes the player must identify.
  * @param {Note[]} guess  - The player's guessed set of notes.
  * @returns {ChordFeedback[]}
@@ -495,9 +506,10 @@ function chord_is_lost(chord_game) {
 }
 
 /**
- * Return true if the chord game has ended — either the player won or all
+ * Return true if the chord game has ended - either the player won or all
  * attempts have been used.
  *
+ * @function chord_is_over
  * @param {ChordGame} chord_game
  * @returns {boolean}
  *
@@ -512,9 +524,10 @@ const chord_is_over = R.either(chord_is_won, chord_is_lost);
  *
  * If the chord game is already over, the state is returned unchanged.
  *
- * Curried — partially apply the guess:
+ * Curried - partially apply the guess:
  * `const try_ceg = make_chord_guess(["C","E","G"]);`
  *
+ * @function make_chord_guess
  * @param {Note[]}    guess      - The player's guessed set of notes.
  * @param {ChordGame} chord_game - Current chord game state.
  * @returns {ChordGame} Updated chord game state.
